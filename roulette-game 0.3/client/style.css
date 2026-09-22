@@ -1,5 +1,5 @@
 /* ============================================================
-   Royal Roulette - Casino Style (Final)
+   Royal Roulette - Casino Style (v5 Final)
    ============================================================ */
 
 * {
@@ -193,6 +193,14 @@ body {
     height: 100%;
     display: block;
     border-radius: 50%;
+}
+
+.wheel-numbers .wnum {
+    display: none;
+}
+
+.wheel::before {
+    display: none;
 }
 
 .wheel-pointer {
