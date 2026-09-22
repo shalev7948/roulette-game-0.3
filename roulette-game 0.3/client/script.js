@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v6 Final)
+ *  European Roulette - Client (v7 Final)
  * ============================================================
  */
 
@@ -63,7 +63,7 @@ function showToast(msg, type = 'info') {
 }
 
 // ============================================================
-//  בניית לוח המספרים
+//  בניית לוח המספרים 1-36
 // ============================================================
 function buildNumbersGrid() {
     numbersGrid.innerHTML = '';
@@ -84,7 +84,6 @@ function buildNumbersGrid() {
                 btn.classList.add('black');
             }
 
-            btn.addEventListener('click', () => handleBetClick(btn));
             numbersGrid.appendChild(btn);
         }
     }
@@ -306,7 +305,6 @@ function handleBetClick(btn) {
         numbers = numbersRaw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
     }
 
-    // בניית key ייחודי
     const key = type + '-' + (numbers.length > 0 ? numbers.join(',') : 'empty');
 
     console.log('🎯 נלחץ כפתור:', { type, numbers, key });
@@ -372,13 +370,39 @@ function setupChips() {
     if (!chipsContainer) return;
     const chips = chipsContainer.querySelectorAll('.chip');
     chips.forEach(chip => {
-        chip.addEventListener('click', () => {
+        chip.addEventListener('click', (e) => {
+            e.stopPropagation();
             if (state.isSpinning) return;
             chips.forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             state.betAmount = Number(chip.dataset.value) || 10;
             showToast('סכום הימור: ' + state.betAmount, 'info');
         });
+    });
+}
+
+// ============================================================
+//  Event Delegation - חיבור כל הכפתורים
+//  פותר את הבעיה של כפתורים חיצוניים שלא מגיבים
+// ============================================================
+function attachBetListeners() {
+    document.addEventListener('click', (e) => {
+        // כפתור SPIN או CLEAR - דלג
+        if (e.target.closest('#spin-btn') || e.target.closest('#clear-btn')) {
+            return;
+        }
+
+        // כפתור צ'יפ - דלג (מטופל ב-setupChips)
+        if (e.target.closest('.chip')) {
+            return;
+        }
+
+        // חפש את כפתור ההימור הקרוב
+        const btn = e.target.closest('.bet-btn');
+        if (!btn) return;
+
+        e.preventDefault();
+        handleBetClick(btn);
     });
 }
 
@@ -574,19 +598,26 @@ function updateHistory() {
 //  אתחול
 // ============================================================
 function init() {
+    // 1. בניית הלוח הדינמי
+    buildNumbersGrid();
+    
+    // 2. בניית הגלגל
+    buildWheel();
+    
+    // 3. חיבור Event Delegation לכל הכפתורים
+    attachBetListeners();
+    
+    // 4. כפתורי פעולה
     spinBtn.addEventListener('click', spin);
     clearBtn.addEventListener('click', clearBets);
-
-    buildNumbersGrid();
-    buildWheel();
+    
+    // 5. צ'יפים
     setupChips();
+    
+    // 6. עדכון ממשק ראשוני
     updateUI();
 
-    console.log('✅ Royal Roulette v6 אותחל');
+    console.log('✅ Royal Roulette v7 אותחל');
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+window.addEventListener('load', init);
