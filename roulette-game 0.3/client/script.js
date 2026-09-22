@@ -116,7 +116,6 @@ function buildWheel() {
 
     const defs = document.createElementNS(svgNS, 'defs');
 
-    // גרדיאנט זהב
     const goldGrad = document.createElementNS(svgNS, 'radialGradient');
     goldGrad.setAttribute('id', 'goldGrad');
     goldGrad.setAttribute('cx', '35%');
@@ -135,7 +134,6 @@ function buildWheel() {
     goldGrad.appendChild(gs3);
     defs.appendChild(goldGrad);
 
-    // גרדיאנט למרכז
     const hubGrad = document.createElementNS(svgNS, 'radialGradient');
     hubGrad.setAttribute('id', 'hubGrad');
     hubGrad.setAttribute('cx', '35%');
@@ -156,7 +154,6 @@ function buildWheel() {
 
     svg.appendChild(defs);
 
-    // --- טבעת זהב חיצונית ---
     const outerRing = document.createElementNS(svgNS, 'circle');
     outerRing.setAttribute('cx', center);
     outerRing.setAttribute('cy', center);
@@ -166,7 +163,6 @@ function buildWheel() {
     outerRing.setAttribute('stroke-width', '2');
     svg.appendChild(outerRing);
 
-    // --- 37 מקטעים ---
     const startOffset = -90 - (anglePer / 2);
 
     WHEEL_ORDER.forEach((num, idx) => {
@@ -202,7 +198,6 @@ function buildWheel() {
         polygon.setAttribute('stroke-width', '0.6');
         svg.appendChild(polygon);
 
-        // --- מפריד בין המקטעים ---
         const sep = document.createElementNS(svgNS, 'line');
         sep.setAttribute('x1', center + innerR * Math.cos(startRad));
         sep.setAttribute('y1', center + innerR * Math.sin(startRad));
@@ -212,7 +207,6 @@ function buildWheel() {
         sep.setAttribute('stroke-width', '0.8');
         svg.appendChild(sep);
 
-        // --- טקסט המספר ---
         const textRad = (midAngle * Math.PI) / 180;
         const tx = center + textR * Math.cos(textRad);
         const ty = center + textR * Math.sin(textRad);
@@ -230,7 +224,6 @@ function buildWheel() {
         text.textContent = num;
         svg.appendChild(text);
 
-        // --- מסמר חיצוני ---
         const dotX = center + (outerR - 6) * Math.cos(textRad);
         const dotY = center + (outerR - 6) * Math.sin(textRad);
         const dot = document.createElementNS(svgNS, 'circle');
@@ -241,7 +234,6 @@ function buildWheel() {
         svg.appendChild(dot);
     });
 
-    // --- טבעת פנימית ---
     const innerRing = document.createElementNS(svgNS, 'circle');
     innerRing.setAttribute('cx', center);
     innerRing.setAttribute('cy', center);
@@ -251,7 +243,6 @@ function buildWheel() {
     innerRing.setAttribute('stroke-width', '2');
     svg.appendChild(innerRing);
 
-    // --- מרכז זהוב ---
     const hub = document.createElementNS(svgNS, 'circle');
     hub.setAttribute('cx', center);
     hub.setAttribute('cy', center);
@@ -261,7 +252,6 @@ function buildWheel() {
     hub.setAttribute('stroke-width', '2');
     svg.appendChild(hub);
 
-    // --- 8 זרועות ---
     for (let s = 0; s < 8; s++) {
         const sAngle = (s * 45) * Math.PI / 180;
         const x1 = center + 25 * Math.cos(sAngle);
@@ -281,7 +271,6 @@ function buildWheel() {
         svg.appendChild(spoke);
     }
 
-    // --- ציר מרכזי ---
     const axle = document.createElementNS(svgNS, 'circle');
     axle.setAttribute('cx', center);
     axle.setAttribute('cy', center);
