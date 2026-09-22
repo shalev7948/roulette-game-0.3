@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a3d1f">
+    <meta name="description" content="משחק רולטה אירופית - Royal Roulette">
+    <title>🎰 Royal Roulette</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="casino-bg"></div>
+
+    <div class="game-container">
+        <header class="header">
+            <div class="header-ornament left">✦</div>
+            <div class="header-inner">
+                <h1>ROYAL ROULETTE</h1>
+                <p class="subtitle">— EUROPEAN —</p>
+            </div>
+            <div class="header-ornament right">✦</div>
+        </header>
+
+        <div class="info-bar">
+            <div class="info-item">
+                <span class="label">💎 BALANCE</span>
+                <span id="balance" class="value">1000</span>
+            </div>
+            <div class="info-item">
+                <span class="label">🎯 TOTAL BET</span>
+                <span id="total-bet" class="value">0</span>
+            </div>
+            <div class="info-item">
+                <span class="label">🏆 LAST WIN</span>
+                <span id="last-win" class="value">—</span>
+            </div>
+        </div>
+
+        <div class="wheel-section">
+            <div class="wheel-container" id="wheel-container">
+                <div id="wheel" class="wheel">
+                    <div class="wheel-numbers" id="wheel-numbers"></div>
+                    <div class="wheel-center">
+                        <div class="wheel-hub"></div>
+                    </div>
+                </div>
+                <div class="wheel-pointer">▼</div>
+            </div>
+            <div id="result-badge" class="result-badge hidden" aria-live="polite">
+                <div id="winning-number" class="winning-number"></div>
+                <div id="win-details" class="win-details"></div>
+            </div>
+        </div>
+
+        <div class="betting-board">
+            <div class="board-label">PLACE YOUR BETS</div>
+
+            <div class="main-board">
+                <div class="zero-column">
+                    <button type="button" class="bet-btn zero" data-type="straight" data-numbers="0" data-key="straight-0" aria-label="הימור על 0">
+                        <span class="num">0</span>
+                    </button>
+                </div>
+                <div class="numbers-grid" id="numbers-grid"></div>
+                <div class="column-bets">
+                    <button type="button" class="bet-btn column-btn" data-type="column" data-numbers="3" data-key="column-3" aria-label="עמודה 3">
+                        <span>2:1</span>
+                    </button>
+                    <button type="button" class="bet-btn column-btn" data-type="column" data-numbers="2" data-key="column-2" aria-label="עמודה 2">
+                        <span>2:1</span>
+                    </button>
+                    <button type="button" class="bet-btn column-btn" data-type="column" data-numbers="1" data-key="column-1" aria-label="עמודה 1">
+                        <span>2:1</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="dozens-row">
+                <button type="button" class="bet-btn dozen-btn" data-type="dozen" data-numbers="1" data-key="dozen-1" aria-label="תריסר ראשון">
+                    <span class="dozen-label">1st 12</span>
+                    <span class="payout">2:1</span>
+                </button>
+                <button type="button" class="bet-btn dozen-btn" data-type="dozen" data-numbers="2" data-key="dozen-2" aria-label="תריסר שני">
+                    <span class="dozen-label">2nd 12</span>
+                    <span class="payout">2:1</span>
+                </button>
+                <button type="button" class="bet-btn dozen-btn" data-type="dozen" data-numbers="3" data-key="dozen-3" aria-label="תריסר שלישי">
+                    <span class="dozen-label">3rd 12</span>
+                    <span class="payout">2:1</span>
+                </button>
+            </div>
+
+            <div class="even-money-row">
+                <button type="button" class="bet-btn em-btn" data-type="low" data-numbers="" data-key="low" aria-label="1 עד 18">
+                    <span>1 to 18</span>
+                </button>
+                <button type="button" class="bet-btn em-btn" data-type="even" data-numbers="" data-key="even" aria-label="זוגי">
+                    <span>EVEN</span>
+                </button>
+                <button type="button" class="bet-btn em-btn red-bg" data-type="red" data-numbers="" data-key="red" aria-label="אדום">
+                    <span>RED</span>
+                    <span class="diamond">◆</span>
+                </button>
+                <button type="button" class="bet-btn em-btn black-bg" data-type="black" data-numbers="" data-key="black" aria-label="שחור">
+                    <span>BLACK</span>
+                    <span class="diamond">◆</span>
+                </button>
+                <button type="button" class="bet-btn em-btn" data-type="odd" data-numbers="" data-key="odd" aria-label="אי-זוגי">
+                    <span>ODD</span>
+                </button>
+                <button type="button" class="bet-btn em-btn" data-type="high" data-numbers="" data-key="high" aria-label="19 עד 36">
+                    <span>19 to 36</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="chip-selector">
+            <div class="chip-label">SELECT CHIP VALUE</div>
+            <div class="chips" id="chips">
+                <button type="button" class="chip chip-1" data-value="1" aria-label="צ'יפ 1">1</button>
+                <button type="button" class="chip chip-5" data-value="5" aria-label="צ'יפ 5">5</button>
+                <button type="button" class="chip chip-10 active" data-value="10" aria-label="צ'יפ 10">10</button>
+                <button type="button" class="chip chip-25" data-value="25" aria-label="צ'יפ 25">25</button>
+                <button type="button" class="chip chip-100" data-value="100" aria-label="צ'יפ 100">100</button>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button type="button" id="clear-btn" class="action-btn clear">🗑️ CLEAR</button>
+            <button type="button" id="spin-btn" class="action-btn spin">🎲 SPIN</button>
+        </div>
+
+        <div class="history-section">
+            <h3>LAST RESULTS</h3>
+            <div id="history-list" class="history-list">
+                <span class="no-history">—</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
