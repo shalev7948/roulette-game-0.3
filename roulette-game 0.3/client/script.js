@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v4 - תיקון כל הבעיות)
+ *  European Roulette - Client (v5 - Realistic Wheel)
  * ============================================================
  */
 
@@ -42,7 +42,7 @@ const chipsContainer = $('chips');
 // ============================================================
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
-// סדר המספרים על גלגל רולטה אירופי (נגד כיוון השעון)
+// סדר המספרים על גלגל רולטה אירופי אמיתי (סדר היצרן - נגד כיוון השעון)
 const WHEEL_ORDER = [
     0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10,
     5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
@@ -64,28 +64,14 @@ function showToast(msg, type = 'info') {
 }
 
 // ============================================================
-//  בניית לוח המספרים - סדר נכון כמו רולטה אמיתית
-//  הטור הימני: 3, 6, 9, ..., 36
-//  האמצעי:     2, 5, 8, ..., 35
-//  השמאלי:     1, 4, 7, ..., 34
-//  
-//  ויזואלית מלמעלה למטה: 36,35,34 ... 3,2,1
-//  כלומר שורה עליונה = 36,35,34; שורה תחתונה = 3,2,1
+//  בניית לוח המספרים
 // ============================================================
 function buildNumbersGrid() {
     numbersGrid.innerHTML = '';
-    
-    // 12 שורות, כל שורה 3 מספרים
-    // שורה r (0-11) מכילה את המספרים: 
-    //   שמאלי: (11-r)*3 + 1
-    //   אמצעי: (11-r)*3 + 2
-    //   ימני:  (11-r)*3 + 3
-    // סדר ויזואלי בתוך השורה: ימני, אמצעי, שמאלי (כדי ש-3,2,1 יופיעו משמאל לימין)
     for (let row = 0; row < 12; row++) {
-        const base = (11 - row) * 3; // 33, 30, 27, ...
-        // שלושה מספרים: base+3, base+2, base+1
+        const base = (11 - row) * 3;
         for (let i = 0; i < 3; i++) {
-            const num = base + (3 - i); // 3,2,1 או 6,5,4 וכן הלאה
+            const num = base + (3 - i);
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'bet-btn num-btn';
@@ -108,34 +94,246 @@ function buildNumbersGrid() {
 }
 
 // ============================================================
-//  בניית הגלגל - מספרים סביב ההיקף
+//  בניית הגלגל הריאליסטי עם SVG
 // ============================================================
 function buildWheel() {
-    wheelNumbersEl.innerHTML = '';
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const size = 400;              // קוטב הגלגל ביחידות SVG
+    const center = size / 2;       // מרכז
+    const outerR = 195;            // רדיוס חיצוני (מקטעים)
+    const innerR = 130;            // רדיוס פנימי (תחילת המקטע)
+    const textR = 168;             // רדיוס הטקסט
     const total = WHEEL_ORDER.length; // 37
-    const container = wheelNumbersEl;
-    const radiusPercent = 38; // אחוז מהרדיוס של ההיקף
+    const anglePer = 360 / total;  // ~9.73°
+
+    // ניקוי
+    wheelNumbersEl.innerHTML = '';
+
+    // יצירת SVG
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+    svg.setAttribute('class', 'wheel-svg');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    // ============================================================
+    //  הגדרות צבעים
+    // ============================================================
+    const colorGreen = '#0d8a3e';
+    const colorRed = '#c8102e';
+    const colorBlack = '#1a1a1a';
+
+    // ============================================================
+    //  רקע חיצוני (טבעת זהב)
+    // ============================================================
+    const outerRing = document.createElementNS(svgNS, 'circle');
+    outerRing.setAttribute('cx', center);
+    outerRing.setAttribute('cy', center);
+    outerRing.setAttribute('r', outerR + 8);
+    outerRing.setAttribute('fill', 'url(#goldGrad)');
+    outerRing.setAttribute('stroke', '#6b4a0f');
+    outerRing.setAttribute('stroke-width', '2');
+    svg.appendChild(outerRing);
+
+    // ============================================================
+    //  הגדרת גרדיאנטים
+    // ============================================================
+    const defs = document.createElementNS(svgNS, 'defs');
+    
+    // גרדיאנט זהב
+    const goldGrad = document.createElementNS(svgNS, 'radialGradient');
+    goldGrad.setAttribute('id', 'goldGrad');
+    goldGrad.setAttribute('cx', '35%');
+    goldGrad.setAttribute('cy', '30%');
+    const gs1 = document.createElementNS(svgNS, 'stop');
+    gs1.setAttribute('offset', '0%');
+    gs1.setAttribute('stop-color', '#f9e79f');
+    const gs2 = document.createElementNS(svgNS, 'stop');
+    gs2.setAttribute('offset', '50%');
+    gs2.setAttribute('stop-color', '#d4af37');
+    const gs3 = document.createElementNS(svgNS, 'stop');
+    gs3.setAttribute('offset', '100%');
+    gs3.setAttribute('stop-color', '#8b6914');
+    goldGrad.appendChild(gs1);
+    goldGrad.appendChild(gs2);
+    goldGrad.appendChild(gs3);
+    defs.appendChild(goldGrad);
+
+    // גרדיאנט למרכז
+    const hubGrad = document.createElementNS(svgNS, 'radialGradient');
+    hubGrad.setAttribute('id', 'hubGrad');
+    hubGrad.setAttribute('cx', '35%');
+    hubGrad.setAttribute('cy', '30%');
+    const hs1 = document.createElementNS(svgNS, 'stop');
+    hs1.setAttribute('offset', '0%');
+    hs1.setAttribute('stop-color', '#fff8dc');
+    const hs2 = document.createElementNS(svgNS, 'stop');
+    hs2.setAttribute('offset', '60%');
+    hs2.setAttribute('stop-color', '#d4af37');
+    const hs3 = document.createElementNS(svgNS, 'stop');
+    hs3.setAttribute('offset', '100%');
+    hs3.setAttribute('stop-color', '#5c4508');
+    hubGrad.appendChild(hs1);
+    hubGrad.appendChild(hs2);
+    hubGrad.appendChild(hs3);
+    defs.appendChild(hubGrad);
+
+    svg.appendChild(defs);
+
+    // ============================================================
+    //  יצירת 37 מקטעים
+    // ============================================================
+    const startOffset = -90 - (anglePer / 2); // מתחילים מלמעלה, ומיישרים את המקטע הראשון למרכז החץ
 
     WHEEL_ORDER.forEach((num, idx) => {
-        const angle = (idx / total) * 360;
-        const span = document.createElement('span');
-        span.className = 'wnum';
-        span.textContent = num;
-        
-        // המיקום: מתחילים ממרכז, ומזיזים החוצה בזווית
-        span.style.transform = 
-            `translate(-50%, -50%) rotate(${angle}deg) translateY(-${radiusPercent * 2}px) rotate(-${angle}deg)`;
-        
+        const startAngle = startOffset + idx * anglePer;
+        const endAngle = startAngle + anglePer;
+        const midAngle = (startAngle + endAngle) / 2;
+
+        // --- צבע המקטע ---
+        let fillColor;
         if (num === 0) {
-            span.style.color = '#2ecc71';
+            fillColor = colorGreen;
         } else if (RED_NUMBERS.includes(num)) {
-            span.style.color = '#ff6b6b';
+            fillColor = colorRed;
         } else {
-            span.style.color = '#fff';
+            fillColor = colorBlack;
         }
 
-        container.appendChild(span);
+        // --- חישוב נקודות הפוליגון (מקטע) ---
+        // 4 פינות: inner-start, outer-start, outer-end, inner-end
+        const startRad = (startAngle * Math.PI) / 180;
+        const endRad = (endAngle * Math.PI) / 180;
+
+        const x1 = center + innerR * Math.cos(startRad);
+        const y1 = center + innerR * Math.sin(startRad);
+        const x2 = center + outerR * Math.cos(startRad);
+        const y2 = center + outerR * Math.sin(startRad);
+        const x3 = center + outerR * Math.cos(endRad);
+        const y3 = center + outerR * Math.sin(endRad);
+        const x4 = center + innerR * Math.cos(endRad);
+        const y4 = center + innerR * Math.sin(endRad);
+
+        const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
+
+        const polygon = document.createElementNS(svgNS, 'polygon');
+        polygon.setAttribute('points', points);
+        polygon.setAttribute('fill', fillColor);
+        polygon.setAttribute('stroke', '#d4af37');
+        polygon.setAttribute('stroke-width', '0.5');
+        svg.appendChild(polygon);
+
+        // --- מפריד לבן דק בין המקטעים ---
+        const separator = document.createElementNS(svgNS, 'line');
+        separator.setAttribute('x1', center + innerR * Math.cos(startRad));
+        separator.setAttribute('y1', center + innerR * Math.sin(startRad));
+        separator.setAttribute('x2', center + outerR * Math.cos(startRad));
+        separator.setAttribute('y2', center + outerR * Math.sin(startRad));
+        separator.setAttribute('stroke', 'rgba(212, 175, 55, 0.4)');
+        separator.setAttribute('stroke-width', '0.7');
+        svg.appendChild(separator);
+
+        // --- טקסט המספר ---
+        const textRad = (midAngle * Math.PI) / 180;
+        const tx = center + textR * Math.cos(textRad);
+        const ty = center + textR * Math.sin(textRad);
+
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', tx);
+        text.setAttribute('y', ty);
+        text.setAttribute('fill', '#fff');
+        text.setAttribute('font-size', '11');
+        text.setAttribute('font-weight', 'bold');
+        text.setAttribute('font-family', 'Arial, sans-serif');
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('dominant-baseline', 'central');
+        // סיבוב הטקסט כך שיהיה בכיוון הרדיאלי
+        text.setAttribute('transform', `rotate(${midAngle + 90} ${tx} ${ty})`);
+        text.setAttribute('style', 'text-shadow: 0 0 3px rgba(0,0,0,0.9);');
+        text.textContent = num;
+        svg.appendChild(text);
+
+        // --- נקודת מסמן (מסמר) בחלק החיצוני ---
+        const dotX = center + (outerR - 8) * Math.cos(textRad);
+        const dotY = center + (outerR - 8) * Math.sin(textRad);
+        const dot = document.createElementNS(svgNS, 'circle');
+        dot.setAttribute('cx', dotX);
+        dot.setAttribute('cy', dotY);
+        dot.setAttribute('r', '1.5');
+        dot.setAttribute('fill', '#f9e79f');
+        dot.setAttribute('opacity', '0.9');
+        svg.appendChild(dot);
     });
+
+    // ============================================================
+    //  טבעת פנימית (מעל המקטעים)
+    // ============================================================
+    const innerRing = document.createElementNS(svgNS, 'circle');
+    innerRing.setAttribute('cx', center);
+    innerRing.setAttribute('cy', center);
+    innerRing.setAttribute('r', innerR);
+    innerRing.setAttribute('fill', 'none');
+    innerRing.setAttribute('stroke', '#d4af37');
+    innerRing.setAttribute('stroke-width', '2');
+    svg.appendChild(innerRing);
+
+    // ============================================================
+    //  אזור המרכז המוזהב
+    // ============================================================
+    const hub = document.createElementNS(svgNS, 'circle');
+    hub.setAttribute('cx', center);
+    hub.setAttribute('cy', center);
+    hub.setAttribute('r', innerR - 5);
+    hub.setAttribute('fill', 'url(#hubGrad)');
+    hub.setAttribute('stroke', '#5c4508');
+    hub.setAttribute('stroke-width', '2');
+    svg.appendChild(hub);
+
+    // ============================================================
+    //  8 זרועות (spokes) של הגלגל
+    // ============================================================
+    for (let s = 0; s < 8; s++) {
+        const sAngle = (s * 45) * Math.PI / 180;
+        const x1 = center + 25 * Math.cos(sAngle);
+        const y1 = center + 25 * Math.sin(sAngle);
+        const x2 = center + (innerR - 20) * Math.cos(sAngle);
+        const y2 = center + (innerR - 20) * Math.sin(sAngle);
+        
+        const spoke = document.createElementNS(svgNS, 'line');
+        spoke.setAttribute('x1', x1);
+        spoke.setAttribute('y1', y1);
+        spoke.setAttribute('x2', x2);
+        spoke.setAttribute('y2', y2);
+        spoke.setAttribute('stroke', 'url(#goldGrad)');
+        spoke.setAttribute('stroke-width', '4');
+        spoke.setAttribute('stroke-linecap', 'round');
+        spoke.setAttribute('opacity', '0.85');
+        svg.appendChild(spoke);
+    }
+
+    // ============================================================
+    //  מרכז המרכז (הציר)
+    // ============================================================
+    const axle = document.createElementNS(svgNS, 'circle');
+    axle.setAttribute('cx', center);
+    axle.setAttribute('cy', center);
+    axle.setAttribute('r', '18');
+    axle.setAttribute('fill', 'url(#hubGrad)');
+    axle.setAttribute('stroke', '#5c4508');
+    axle.setAttribute('stroke-width', '1.5');
+    svg.appendChild(axle);
+
+    const axleDot = document.createElementNS(svgNS, 'circle');
+    axleDot.setAttribute('cx', center);
+    axleDot.setAttribute('cy', center);
+    axleDot.setAttribute('r', '6');
+    axleDot.setAttribute('fill', '#fff8dc');
+    axleDot.setAttribute('opacity', '0.85');
+    svg.appendChild(axleDot);
+
+    // ============================================================
+    //  הוספה ל-DOM
+    // ============================================================
+    wheelNumbersEl.appendChild(svg);
 }
 
 // ============================================================
@@ -148,27 +346,20 @@ function handleBetClick(btn) {
     const numbersRaw = btn.dataset.numbers;
     const key = btn.dataset.key || (type + '-' + numbersRaw);
 
-    if (!type || !key) {
-        console.warn('Invalid bet button', btn);
-        return;
-    }
+    if (!type || !key) return;
 
-    // המרה נכונה: "" => [], "5" => [5], "1,2" => [1,2]
     let numbers = [];
     if (numbersRaw && numbersRaw.trim() !== '') {
         numbers = numbersRaw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
     }
 
-    // חיפוש הימור קיים לפי key
     const existingIdx = state.bets.findIndex(b => b.key === key);
 
     if (existingIdx >= 0) {
-        // הסרה
         state.bets.splice(existingIdx, 1);
         btn.classList.remove('selected');
         btn.removeAttribute('data-chip');
     } else {
-        // הוספה
         if (state.betAmount <= 0) {
             showToast('בחר צ\'יפ תקין', 'error');
             return;
@@ -237,11 +428,11 @@ function setupChips() {
 }
 
 // ============================================================
-//  אנימציית סיבוב רציפה
+//  אנימציית סיבוב
 // ============================================================
 function startContinuousSpin() {
     const startTime = performance.now();
-    const baseSpeed = 360 * 3; // 1080° לשנייה
+    const baseSpeed = 360 * 3;
 
     function animate(now) {
         const elapsed = (now - startTime) / 1000;
@@ -253,9 +444,6 @@ function startContinuousSpin() {
     state.animationId = requestAnimationFrame(animate);
 }
 
-// ============================================================
-//  עצירה חלקה על המספר הזוכה
-// ============================================================
 function stopSpinOnNumber(winningNumber) {
     return new Promise(resolve => {
         if (state.animationId) {
@@ -264,9 +452,8 @@ function stopSpinOnNumber(winningNumber) {
         }
 
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
-        const anglePerNum = 360 / WHEEL_ORDER.length;
-
-        const targetMod = (360 - (idx * anglePerNum)) % 360;
+        const anglePer = 360 / WHEEL_ORDER.length;
+        const targetMod = (360 - (idx * anglePer)) % 360;
         const currentMod = state.wheelAngle % 360;
         const delta = (targetMod - currentMod + 360) % 360;
         const finalAngle = state.wheelAngle + 360 * 5 + delta;
@@ -336,7 +523,6 @@ async function spin() {
         }
 
         const data = result.data;
-
         await stopSpinOnNumber(data.winningNumber);
 
         state.balance = data.newBalance;
@@ -434,18 +620,4 @@ function updateHistory() {
 // ============================================================
 function init() {
     spinBtn.addEventListener('click', spin);
-    clearBtn.addEventListener('click', clearBets);
-
-    buildNumbersGrid();
-    buildWheel();
-    setupChips();
-    updateUI();
-
-    console.log('✅ Royal Roulette אותחל');
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+    clearBtn.addEventListener('click', clearBet
