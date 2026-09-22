@@ -1,11 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v3 - All bugs fixed)
- * ============================================================
- *  - בניית הלוח והגלגל
- *  - ניהול הימורים
- *  - תקשורת עם השרת
- *  - אנימציית סיבוב רציפה
+ *  European Roulette - Client (v4 - תיקון כל הבעיות)
  * ============================================================
  */
 
@@ -14,7 +9,7 @@
 // ============================================================
 const state = {
     balance: 1000,
-    bets: [],              // [{ type, numbers, amount, key }]
+    bets: [],
     isSpinning: false,
     history: [],
     betAmount: 10,
@@ -47,6 +42,7 @@ const chipsContainer = $('chips');
 // ============================================================
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
+// סדר המספרים על גלגל רולטה אירופי (נגד כיוון השעון)
 const WHEEL_ORDER = [
     0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10,
     5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
@@ -68,16 +64,28 @@ function showToast(msg, type = 'info') {
 }
 
 // ============================================================
-//  בניית לוח המספרים 1-36
-//  סדר: 12 עמודות × 3 שורות
-//  שורה עליונה: 3, 2, 1
-//  שורה תחתונה: 36, 35, 34
+//  בניית לוח המספרים - סדר נכון כמו רולטה אמיתית
+//  הטור הימני: 3, 6, 9, ..., 36
+//  האמצעי:     2, 5, 8, ..., 35
+//  השמאלי:     1, 4, 7, ..., 34
+//  
+//  ויזואלית מלמעלה למטה: 36,35,34 ... 3,2,1
+//  כלומר שורה עליונה = 36,35,34; שורה תחתונה = 3,2,1
 // ============================================================
 function buildNumbersGrid() {
     numbersGrid.innerHTML = '';
+    
+    // 12 שורות, כל שורה 3 מספרים
+    // שורה r (0-11) מכילה את המספרים: 
+    //   שמאלי: (11-r)*3 + 1
+    //   אמצעי: (11-r)*3 + 2
+    //   ימני:  (11-r)*3 + 3
+    // סדר ויזואלי בתוך השורה: ימני, אמצעי, שמאלי (כדי ש-3,2,1 יופיעו משמאל לימין)
     for (let row = 0; row < 12; row++) {
+        const base = (11 - row) * 3; // 33, 30, 27, ...
+        // שלושה מספרים: base+3, base+2, base+1
         for (let i = 0; i < 3; i++) {
-            const num = row * 3 + (3 - i);
+            const num = base + (3 - i); // 3,2,1 או 6,5,4 וכן הלאה
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'bet-btn num-btn';
@@ -100,21 +108,24 @@ function buildNumbersGrid() {
 }
 
 // ============================================================
-//  בניית הגלגל
+//  בניית הגלגל - מספרים סביב ההיקף
 // ============================================================
 function buildWheel() {
     wheelNumbersEl.innerHTML = '';
     const total = WHEEL_ORDER.length; // 37
-    const radius = 40; // אחוז מהרדיוס
+    const container = wheelNumbersEl;
+    const radiusPercent = 38; // אחוז מהרדיוס של ההיקף
 
     WHEEL_ORDER.forEach((num, idx) => {
         const angle = (idx / total) * 360;
         const span = document.createElement('span');
         span.className = 'wnum';
         span.textContent = num;
-        span.style.transform =
-            `rotate(${angle}deg) translateY(-${radius}%) rotate(-${angle}deg)`;
-
+        
+        // המיקום: מתחילים ממרכז, ומזיזים החוצה בזווית
+        span.style.transform = 
+            `translate(-50%, -50%) rotate(${angle}deg) translateY(-${radiusPercent * 2}px) rotate(-${angle}deg)`;
+        
         if (num === 0) {
             span.style.color = '#2ecc71';
         } else if (RED_NUMBERS.includes(num)) {
@@ -123,7 +134,7 @@ function buildWheel() {
             span.style.color = '#fff';
         }
 
-        wheelNumbersEl.appendChild(span);
+        container.appendChild(span);
     });
 }
 
@@ -134,7 +145,7 @@ function handleBetClick(btn) {
     if (!btn || state.isSpinning) return;
 
     const type = btn.dataset.type;
-    const numbersRaw = btn.dataset.numbers || '';
+    const numbersRaw = btn.dataset.numbers;
     const key = btn.dataset.key || (type + '-' + numbersRaw);
 
     if (!type || !key) {
@@ -142,9 +153,13 @@ function handleBetClick(btn) {
         return;
     }
 
-    const numbers = numbersRaw === '' ? [] : numbersRaw.split(',').map(Number);
+    // המרה נכונה: "" => [], "5" => [5], "1,2" => [1,2]
+    let numbers = [];
+    if (numbersRaw && numbersRaw.trim() !== '') {
+        numbers = numbersRaw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
+    }
 
-    // חיפוש הימור קיים
+    // חיפוש הימור קיים לפי key
     const existingIdx = state.bets.findIndex(b => b.key === key);
 
     if (existingIdx >= 0) {
@@ -226,7 +241,7 @@ function setupChips() {
 // ============================================================
 function startContinuousSpin() {
     const startTime = performance.now();
-    const baseSpeed = 360 * 3; // 1080°/שנייה
+    const baseSpeed = 360 * 3; // 1080° לשנייה
 
     function animate(now) {
         const elapsed = (now - startTime) / 1000;
@@ -251,7 +266,6 @@ function stopSpinOnNumber(winningNumber) {
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePerNum = 360 / WHEEL_ORDER.length;
 
-        // הזווית הסופית: סיבוב שלם + הזווית של המספר
         const targetMod = (360 - (idx * anglePerNum)) % 360;
         const currentMod = state.wheelAngle % 360;
         const delta = (targetMod - currentMod + 360) % 360;
@@ -269,7 +283,7 @@ function stopSpinOnNumber(winningNumber) {
 }
 
 // ============================================================
-//  סיבוב - פונקציה ראשית
+//  סיבוב
 // ============================================================
 async function spin() {
     if (state.isSpinning || state.bets.length === 0) return;
@@ -279,13 +293,11 @@ async function spin() {
     spinBtn.textContent = '⏳ SPINNING...';
     resultArea.classList.add('hidden');
 
-    // אנימציית הגדלה על ה-container (לא על ה-wheel)
     wheelContainer.classList.add('growing');
     startContinuousSpin();
 
-    // --- AbortController עם timeout ---
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
         const response = await fetch('/api/spin', {
@@ -325,22 +337,17 @@ async function spin() {
 
         const data = result.data;
 
-        // המתנה אנימציה + עצירה על המספר הזוכה
         await stopSpinOnNumber(data.winningNumber);
 
-        // עדכון יתרה (מהשרת - מקור האמת)
         state.balance = data.newBalance;
         lastWinEl.textContent = data.totalWin > 0 ? '+' + data.totalWin : '—';
 
-        // הצגת תוצאה
         displayResult(data);
 
-        // היסטוריה
         state.history.unshift(data.winningNumber);
         if (state.history.length > 12) state.history.pop();
         updateHistory();
 
-        // ניקוי הימורים
         state.bets = [];
         document.querySelectorAll('.bet-btn.selected').forEach(btn => {
             btn.classList.remove('selected');
@@ -355,7 +362,6 @@ async function spin() {
         } else {
             showToast('שגיאת תקשורת עם השרת', 'error');
         }
-        // עצירה במקרה של שגיאה
         await stopSpinOnNumber(Math.floor(Math.random() * 37));
     } finally {
         state.isSpinning = false;
@@ -424,7 +430,7 @@ function updateHistory() {
 }
 
 // ============================================================
-//  אירועים ואתחול
+//  אתחול
 // ============================================================
 function init() {
     spinBtn.addEventListener('click', spin);
@@ -438,7 +444,6 @@ function init() {
     console.log('✅ Royal Roulette אותחל');
 }
 
-// הפעלה בטוחה
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
