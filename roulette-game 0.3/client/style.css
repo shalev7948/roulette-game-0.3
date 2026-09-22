@@ -1,447 +1,735 @@
-/**
- * ============================================================
- *  European Roulette - Client (v3 - All bugs fixed)
- * ============================================================
- *  - בניית הלוח והגלגל
- *  - ניהול הימורים
- *  - תקשורת עם השרת
- *  - אנימציית סיבוב רציפה
- * ============================================================
- */
+/* ============================================================
+   Royal Roulette - Casino Style (v3 Final - Complete)
+   ============================================================ */
 
-// ============================================================
-//  מצב המשחק
-// ============================================================
-const state = {
-    balance: 1000,
-    bets: [],              // [{ type, numbers, amount, key }]
-    isSpinning: false,
-    history: [],
-    betAmount: 10,
-    wheelAngle: 0,
-    animationId: null
-};
-
-// ============================================================
-//  DOM - קיצור גישה לאלמנטים
-// ============================================================
-const $ = id => document.getElementById(id);
-const balanceEl = $('balance');
-const totalBetEl = $('total-bet');
-const lastWinEl = $('last-win');
-const numbersGrid = $('numbers-grid');
-const spinBtn = $('spin-btn');
-const clearBtn = $('clear-btn');
-const resultArea = $('result-badge');
-const winningNumberEl = $('winning-number');
-const winDetailsEl = $('win-details');
-const historyList = $('history-list');
-const wheelEl = $('wheel');
-const wheelContainer = $('wheel-container');
-const wheelNumbersEl = $('wheel-numbers');
-const toastEl = $('toast');
-const chipsContainer = $('chips');
-
-// ============================================================
-//  קבועים: צבעי המספרים ברולטה אירופית
-// ============================================================
-const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-
-// סדר המספרים על גלגל רולטה אירופי אמיתי
-const WHEEL_ORDER = [
-    0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10,
-    5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
-];
-
-// ============================================================
-//  Toast - הודעה צפה
-// ============================================================
-let toastTimeout = null;
-function showToast(msg, type = 'info') {
-    if (!toastEl) return;
-    toastEl.textContent = msg;
-    toastEl.className = 'toast show ' + type;
-    if (toastTimeout) clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => {
-        toastEl.className = 'toast';
-        toastTimeout = null;
-    }, 2500);
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
-// ============================================================
-//  בניית לוח המספרים 1-36
-//  12 עמודות × 3 שורות
-//  שורה עליונה: 3, 2, 1
-//  שורה תחתונה: 36, 35, 34
-// ============================================================
-function buildNumbersGrid() {
-    numbersGrid.innerHTML = '';
-    for (let row = 0; row < 12; row++) {
-        for (let i = 0; i < 3; i++) {
-            const num = row * 3 + (3 - i);
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'bet-btn num-btn';
-            btn.textContent = num;
-            btn.dataset.type = 'straight';
-            btn.dataset.numbers = num;
-            btn.dataset.key = 'straight-' + num;
-            btn.setAttribute('aria-label', 'הימור על ' + num);
+:root {
+    --gold: #d4af37;
+    --gold-light: #f9e79f;
+    --gold-dark: #8b6914;
+    --felt: #0e8a4a;
+    --felt-dark: #054a26;
+    --red: #c0392b;
+    --red-bright: #e53935;
+    --black: #0a0a0a;
+    --wood: #3d2817;
+}
 
-            if (RED_NUMBERS.includes(num)) {
-                btn.classList.add('red');
-            } else {
-                btn.classList.add('black');
-            }
+html, body {
+    min-height: 100vh;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: #fff;
+    overflow-x: hidden;
+}
 
-            btn.addEventListener('click', () => handleBetClick(btn));
-            numbersGrid.appendChild(btn);
-        }
+body {
+    background:
+        radial-gradient(ellipse at top, #2a1810 0%, #0a0505 60%),
+        radial-gradient(ellipse at bottom, #1a0f08 0%, #000 100%);
+    padding: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.casino-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+        repeating-linear-gradient(45deg, transparent 0px, transparent 60px, rgba(212, 175, 55, 0.03) 60px, rgba(212, 175, 55, 0.03) 62px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.game-container {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 30px;
+    position: relative;
+    z-index: 1;
+}
+
+/* ============================================================
+   כותרת
+   ============================================================ */
+.header {
+    background: linear-gradient(180deg, #3d2817 0%, #1a0f08 100%);
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow:
+        0 0 25px rgba(212, 175, 55, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.header-inner { flex: 1; text-align: center; }
+
+.header-ornament {
+    color: var(--gold);
+    font-size: 1.2rem;
+    text-shadow: 0 0 8px var(--gold);
+}
+
+.header h1 {
+    font-family: 'Georgia', serif;
+    font-size: clamp(1rem, 3.5vw, 1.6rem);
+    background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: bold;
+    letter-spacing: 4px;
+}
+
+.subtitle {
+    color: var(--gold);
+    font-size: clamp(0.6rem, 2vw, 0.75rem);
+    letter-spacing: 6px;
+    opacity: 0.85;
+    margin-top: 2px;
+}
+
+/* ============================================================
+   סרגל מידע
+   ============================================================ */
+.info-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.info-item {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(30, 15, 5, 0.9) 100%);
+    border: 2px solid var(--gold-dark);
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(212, 175, 55, 0.2);
+}
+
+.info-item .label {
+    color: var(--gold);
+    font-size: clamp(0.6rem, 1.8vw, 0.75rem);
+    letter-spacing: 1px;
+}
+
+.info-item .value {
+    color: #fff;
+    font-weight: bold;
+    font-size: clamp(0.85rem, 2.6vw, 1.1rem);
+    font-family: 'Courier New', monospace;
+}
+
+.info-item:nth-child(1) .value { color: var(--gold-light); }
+.info-item:nth-child(2) .value { color: #ff9933; }
+.info-item:nth-child(3) .value { color: #4ade80; }
+
+/* ============================================================
+   גלגל
+   ============================================================ */
+.wheel-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.wheel-container {
+    width: clamp(200px, 45vw, 280px);
+    height: clamp(200px, 45vw, 280px);
+    position: relative;
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.9));
+    transition: transform 0.5s ease;
+    transform-origin: center;
+    will-change: transform;
+    margin: 0 auto;
+}
+
+.wheel-container.growing { transform: scale(1.15); }
+
+.wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, #3d2817 0%, #1a0f08 70%, #0a0505 100%);
+    border: 6px solid var(--gold);
+    box-shadow:
+        inset 0 0 30px rgba(0, 0, 0, 0.9),
+        0 0 30px rgba(212, 175, 55, 0.5);
+    position: relative;
+    will-change: transform;
+}
+
+.wheel::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--gold-dark);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.wheel-numbers {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+}
+
+.wheel-numbers .wnum {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: clamp(0.5rem, 1.4vw, 0.7rem);
+    font-weight: bold;
+    font-family: 'Arial', sans-serif;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    z-index: 2;
+    width: 22px;
+    height: 22px;
+    margin-left: -11px;
+    margin-top: -11px;
+    pointer-events: none;
+}
+
+.wheel-center {
+    position: absolute;
+    inset: 32%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--gold-light), var(--gold) 50%, var(--gold-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 0 20px rgba(212, 175, 55, 0.9),
+        inset 0 -3px 8px rgba(0, 0, 0, 0.5),
+        inset 0 3px 8px rgba(255, 255, 255, 0.3);
+    z-index: 3;
+}
+
+.wheel-hub {
+    width: 40%;
+    height: 40%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #fff, #ccc 30%, #666 100%);
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.wheel-pointer {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--gold);
+    font-size: 1.6rem;
+    text-shadow: 0 0 12px var(--gold);
+    z-index: 5;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+    pointer-events: none;
+}
+
+/* ============================================================
+   תוצאת סיבוב
+   ============================================================ */
+.result-badge {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(30, 15, 5, 0.95) 100%);
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 12px 25px;
+    text-align: center;
+    min-width: 220px;
+    box-shadow:
+        0 0 30px rgba(212, 175, 55, 0.6),
+        inset 0 0 20px rgba(212, 175, 55, 0.1);
+    animation: popIn 0.5s cubic-bezier(0.5, 1.5, 0.5, 1);
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.result-badge.hidden { display: none; }
+
+.winning-number {
+    font-size: clamp(2.2rem, 9vw, 3.5rem);
+    font-weight: bold;
+    font-family: 'Georgia', serif;
+    line-height: 1;
+    margin-bottom: 6px;
+    text-shadow: 0 0 25px currentColor, 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+.win-details {
+    font-size: clamp(0.75rem, 2.3vw, 0.9rem);
+    color: #ddd;
+    line-height: 1.6;
+}
+
+/* ============================================================
+   לוח הימורים
+   ============================================================ */
+.betting-board {
+    background: radial-gradient(ellipse at center, var(--felt) 0%, var(--felt-dark) 100%);
+    border-radius: 12px;
+    padding: 12px;
+    border: 5px solid var(--wood);
+    outline: 2px solid var(--gold);
+    outline-offset: -8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, 0.8),
+        inset 0 0 80px rgba(0, 0, 0, 0.4);
+}
+
+.board-label {
+    text-align: center;
+    color: var(--gold-light);
+    font-size: clamp(0.6rem, 2vw, 0.75rem);
+    letter-spacing: 4px;
+    padding: 2px 0;
+    opacity: 0.9;
+}
+
+.main-board {
+    display: grid;
+    grid-template-columns: 50px 1fr 50px;
+    gap: 4px;
+    align-items: stretch;
+}
+
+.zero-column { display: flex; }
+
+.zero-column .bet-btn {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+}
+
+.numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 4px;
+    min-height: 130px;
+}
+
+.column-bets {
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+}
+
+/* ============================================================
+   כפתורי הימור
+   ============================================================ */
+.bet-btn {
+    position: relative;
+    padding: 4px 2px;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    color: #fff;
+    font-weight: bold;
+    font-size: clamp(0.7rem, 2vw, 0.95rem);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    user-select: none;
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    overflow: hidden;
+    min-height: 40px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.5),
+        0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.bet-btn:active { transform: scale(0.96); }
+
+@media (hover: hover) {
+    .bet-btn:hover { filter: brightness(1.2); z-index: 2; }
+}
+
+.bet-btn .num {
+    font-size: 1em;
+    font-weight: bold;
+    position: relative;
+    z-index: 1;
+}
+
+.bet-btn .payout {
+    font-size: 0.55em;
+    opacity: 0.85;
+    margin-top: 1px;
+}
+
+.bet-btn.num-btn { min-height: 42px; }
+
+.bet-btn.red {
+    background: radial-gradient(ellipse at top, var(--red-bright) 0%, var(--red) 60%, #6a0d0d 100%);
+}
+
+.bet-btn.black {
+    background: radial-gradient(ellipse at top, #333 0%, #0a0a0a 60%, #000 100%);
+}
+
+.bet-btn.zero {
+    background: radial-gradient(ellipse at top, #10a058 0%, #054a26 60%, #022a15 100%);
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+}
+
+.bet-btn.column-btn {
+    background: linear-gradient(180deg, #2a1810 0%, #1a0f08 100%);
+    color: var(--gold-light);
+    font-size: 0.75rem;
+}
+
+.bet-btn.dozen-btn {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.8) 100%);
+    min-height: 44px;
+}
+
+.bet-btn.em-btn {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.8) 100%);
+    min-height: 48px;
+    font-size: clamp(0.6rem, 1.8vw, 0.85rem);
+}
+
+.bet-btn.em-btn.red-bg {
+    background: radial-gradient(ellipse at top, var(--red-bright) 0%, var(--red) 60%, #6a0d0d 100%);
+}
+
+.bet-btn.em-btn.black-bg {
+    background: radial-gradient(ellipse at top, #333 0%, #0a0a0a 60%, #000 100%);
+}
+
+.bet-btn.em-btn .diamond {
+    font-size: 0.65em;
+    margin-top: 1px;
+    color: var(--gold-light);
+}
+
+.bet-btn.selected {
+    box-shadow:
+        inset 0 0 0 2px #fff,
+        inset 0 0 15px rgba(255, 255, 255, 0.5),
+        0 0 20px rgba(255, 255, 255, 0.9),
+        0 0 30px rgba(212, 175, 55, 0.7);
+    z-index: 3;
+}
+
+.bet-btn.selected::after {
+    content: attr(data-chip);
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    background: radial-gradient(circle at 30% 30%, var(--gold-light), var(--gold-dark));
+    color: #000;
+    font-size: 0.55rem;
+    font-weight: bold;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+/* ============================================================
+   שורות חיצוניות
+   ============================================================ */
+.dozens-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+.even-money-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+}
+
+/* ============================================================
+   צ'יפים
+   ============================================================ */
+.chip-selector {
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid var(--gold-dark);
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+}
+
+.chip-label {
+    color: var(--gold);
+    font-size: clamp(0.65rem, 2vw, 0.8rem);
+    letter-spacing: 2px;
+}
+
+.chips {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.chip {
+    width: clamp(46px, 11vw, 58px);
+    height: clamp(46px, 11vw, 58px);
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-family: 'Arial', sans-serif;
+    border: 4px dashed rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.6),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+    position: relative;
+}
+
+.chip::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    pointer-events: none;
+}
+
+.chip-1   { background: radial-gradient(circle at 30% 30%, #fff, #ccc 60%, #888 100%); color: #000; }
+.chip-5   { background: radial-gradient(circle at 30% 30%, #4a90e2, #2c5aa0 60%, #1a3a6a 100%); }
+.chip-10  { background: radial-gradient(circle at 30% 30%, #e74c3c, #c0392b 60%, #6a0d0d 100%); }
+.chip-25  { background: radial-gradient(circle at 30% 30%, #27ae60, #1e8449 60%, #0e3a20 100%); }
+.chip-100 { background: radial-gradient(circle at 30% 30%, #444, #1a1a1a 60%, #000 100%); }
+
+.chip.active {
+    transform: translateY(-4px) scale(1.08);
+    border-color: var(--gold-light);
+    box-shadow:
+        0 8px 18px rgba(0, 0, 0, 0.7),
+        0 0 25px rgba(212, 175, 55, 0.9),
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   כפתורי פעולה
+   ============================================================ */
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 10px;
+}
+
+.action-btn {
+    padding: 14px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-size: clamp(0.9rem, 3vw, 1.2rem);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Georgia', serif;
+    letter-spacing: 2px;
+}
+
+.action-btn.clear {
+    background: linear-gradient(180deg, #666 0%, #333 100%);
+    color: #fff;
+    border-color: #888;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.5),
+        0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.action-btn.spin {
+    background: linear-gradient(180deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+    color: #1a0f08;
+    border-color: var(--gold-light);
+    box-shadow:
+        0 0 25px rgba(212, 175, 55, 0.7),
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.4),
+        0 6px 15px rgba(0, 0, 0, 0.7);
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+@media (hover: hover) {
+    .action-btn:hover:not(:disabled) {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
     }
 }
 
-// ============================================================
-//  בניית הגלגל עם מספרים סביב ההיקף
-// ============================================================
-function buildWheel() {
-    wheelNumbersEl.innerHTML = '';
-    const total = WHEEL_ORDER.length; // 37
-    const radius = 40; // אחוז מהרדיוס
+.action-btn:active:not(:disabled) { transform: scale(0.97); }
 
-    WHEEL_ORDER.forEach((num, idx) => {
-        const angle = (idx / total) * 360;
-        const span = document.createElement('span');
-        span.className = 'wnum';
-        span.textContent = num;
-        span.style.transform =
-            `rotate(${angle}deg) translateY(-${radius}%) rotate(-${angle}deg)`;
-
-        if (num === 0) {
-            span.style.color = '#2ecc71';
-        } else if (RED_NUMBERS.includes(num)) {
-            span.style.color = '#ff6b6b';
-        } else {
-            span.style.color = '#fff';
-        }
-
-        wheelNumbersEl.appendChild(span);
-    });
+.action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(0.5);
 }
 
-// ============================================================
-//  לחיצה על כפתור הימור
-// ============================================================
-function handleBetClick(btn) {
-    if (!btn || state.isSpinning) return;
+/* ============================================================
+   היסטוריה
+   ============================================================ */
+.history-section {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--gold-dark);
+    border-radius: 10px;
+    padding: 10px;
+}
 
-    const type = btn.dataset.type;
-    const numbersRaw = btn.dataset.numbers || '';
-    const key = btn.dataset.key || (type + '-' + numbersRaw);
+.history-section h3 {
+    color: var(--gold);
+    font-size: clamp(0.7rem, 2vw, 0.85rem);
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+    text-align: center;
+}
 
-    if (!type || !key) {
-        console.warn('Invalid bet button', btn);
-        return;
+.history-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-height: 34px;
+    align-items: center;
+}
+
+.history-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    color: #fff;
+    border: 2px solid rgba(212, 175, 55, 0.6);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.6),
+        0 3px 8px rgba(0, 0, 0, 0.6);
+    font-family: 'Arial', sans-serif;
+}
+
+.no-history {
+    color: #555;
+    font-size: 0.8rem;
+}
+
+/* ============================================================
+   Toast
+   ============================================================ */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid var(--gold);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+    font-family: 'Segoe UI', sans-serif;
+    max-width: 90vw;
+    text-align: center;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.error { border-color: #e74c3c; color: #ff6b6b; }
+.toast.warn  { border-color: #f39c12; color: #ffb84d; }
+.toast.info  { border-color: var(--gold); color: var(--gold-light); }
+
+/* ============================================================
+   מובייל
+   ============================================================ */
+@media (max-width: 560px) {
+    body { padding: 6px; }
+    .game-container { gap: 8px; }
+
+    .bet-btn {
+        min-height: 36px;
+        font-size: 0.75rem;
     }
 
-    const numbers = numbersRaw === '' ? [] : numbersRaw.split(',').map(Number);
+    .bet-btn .payout { display: none; }
 
-    // חיפוש הימור קיים
-    const existingIdx = state.bets.findIndex(b => b.key === key);
+    .main-board { grid-template-columns: 42px 1fr 42px; }
+    .numbers-grid { min-height: 110px; }
 
-    if (existingIdx >= 0) {
-        // הסרה
-        state.bets.splice(existingIdx, 1);
-        btn.classList.remove('selected');
-        btn.removeAttribute('data-chip');
-    } else {
-        // הוספה
-        if (state.betAmount <= 0) {
-            showToast('בחר צ\'יפ תקין', 'error');
-            return;
-        }
-
-        const currentTotal = state.bets.reduce((s, b) => s + b.amount, 0);
-        if (currentTotal + state.betAmount > state.balance) {
-            showToast('אין מספיק יתרה!', 'error');
-            return;
-        }
-
-        state.bets.push({
-            type,
-            numbers,
-            amount: state.betAmount,
-            key
-        });
-        btn.classList.add('selected');
-        btn.setAttribute('data-chip', state.betAmount);
+    .chip {
+        width: 46px;
+        height: 46px;
+        font-size: 0.85rem;
     }
 
-    updateUI();
-}
-
-// ============================================================
-//  עדכון ממשק
-// ============================================================
-function updateUI() {
-    const totalBet = state.bets.reduce((s, b) => s + b.amount, 0);
-    balanceEl.textContent = Math.floor(state.balance);
-    totalBetEl.textContent = totalBet;
-
-    spinBtn.disabled = state.bets.length === 0 || state.isSpinning;
-    clearBtn.disabled = state.bets.length === 0 || state.isSpinning;
-}
-
-// ============================================================
-//  ניקוי הימורים
-// ============================================================
-function clearBets() {
-    if (state.isSpinning) return;
-    state.bets = [];
-    document.querySelectorAll('.bet-btn.selected').forEach(btn => {
-        btn.classList.remove('selected');
-        btn.removeAttribute('data-chip');
-    });
-    resultArea.classList.add('hidden');
-    updateUI();
-}
-
-// ============================================================
-//  בחירת צ'יפ
-// ============================================================
-function setupChips() {
-    if (!chipsContainer) return;
-    const chips = chipsContainer.querySelectorAll('.chip');
-    chips.forEach(chip => {
-        chip.addEventListener('click', () => {
-            if (state.isSpinning) return;
-            chips.forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            state.betAmount = Number(chip.dataset.value) || 10;
-            showToast('סכום הימור: ' + state.betAmount, 'info');
-        });
-    });
-}
-
-// ============================================================
-//  אנימציית סיבוב רציפה
-// ============================================================
-function startContinuousSpin() {
-    const startTime = performance.now();
-    const baseSpeed = 360 * 3; // 1080° לשנייה
-
-    function animate(now) {
-        const elapsed = (now - startTime) / 1000;
-        const speed = baseSpeed * Math.max(0.3, 1 - elapsed * 0.15);
-        state.wheelAngle = (state.wheelAngle + speed / 60) % 360;
-        wheelEl.style.transform = `rotate(${state.wheelAngle}deg)`;
-        state.animationId = requestAnimationFrame(animate);
-    }
-    state.animationId = requestAnimationFrame(animate);
-}
-
-// ============================================================
-//  עצירה חלקה על המספר הזוכה
-// ============================================================
-function stopSpinOnNumber(winningNumber) {
-    return new Promise(resolve => {
-        if (state.animationId) {
-            cancelAnimationFrame(state.animationId);
-            state.animationId = null;
-        }
-
-        const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
-        const anglePerNum = 360 / WHEEL_ORDER.length;
-
-        // הזווית הסופית: סיבוב שלם + הזווית של המספר
-        const targetMod = (360 - (idx * anglePerNum)) % 360;
-        const currentMod = state.wheelAngle % 360;
-        const delta = (targetMod - currentMod + 360) % 360;
-        const finalAngle = state.wheelAngle + 360 * 5 + delta;
-
-        wheelEl.style.transition = 'transform 4s cubic-bezier(0.15, 0.8, 0.15, 1)';
-        wheelEl.style.transform = `rotate(${finalAngle}deg)`;
-        state.wheelAngle = finalAngle % 360;
-
-        setTimeout(() => {
-            wheelEl.style.transition = '';
-            resolve();
-        }, 4100);
-    });
-}
-
-// ============================================================
-//  סיבוב - פונקציה ראשית
-// ============================================================
-async function spin() {
-    if (state.isSpinning || state.bets.length === 0) return;
-
-    state.isSpinning = true;
-    spinBtn.disabled = true;
-    spinBtn.textContent = '⏳ SPINNING...';
-    resultArea.classList.add('hidden');
-
-    // אנימציית הגדלה על ה-container (לא על ה-wheel)
-    wheelContainer.classList.add('growing');
-    startContinuousSpin();
-
-    // --- AbortController עם timeout ---
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-    try {
-        const response = await fetch('/api/spin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                bets: state.bets.map(b => ({
-                    type: b.type,
-                    numbers: b.numbers,
-                    amount: b.amount
-                })),
-                balance: state.balance
-            }),
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            let errMsg = 'HTTP ' + response.status;
-            try {
-                const errBody = await response.json();
-                errMsg = errBody.error || errMsg;
-            } catch (_) { /* ignore */ }
-            showToast('שגיאת שרת: ' + errMsg, 'error');
-            await stopSpinOnNumber(Math.floor(Math.random() * 37));
-            return;
-        }
-
-        const result = await response.json();
-
-        if (!result || !result.success) {
-            showToast('שגיאה: ' + ((result && result.error) || 'Unknown'), 'error');
-            await stopSpinOnNumber(Math.floor(Math.random() * 37));
-            return;
-        }
-
-        const data = result.data;
-
-        // המתנה לסיום אנימציה + עצירה על המספר הזוכה
-        await stopSpinOnNumber(data.winningNumber);
-
-        // עדכון יתרה (מהשרת - מקור האמת)
-        state.balance = data.newBalance;
-        lastWinEl.textContent = data.totalWin > 0 ? '+' + data.totalWin : '—';
-
-        // הצגת תוצאה
-        displayResult(data);
-
-        // היסטוריה
-        state.history.unshift(data.winningNumber);
-        if (state.history.length > 12) state.history.pop();
-        updateHistory();
-
-        // ניקוי הימורים
-        state.bets = [];
-        document.querySelectorAll('.bet-btn.selected').forEach(btn => {
-            btn.classList.remove('selected');
-            btn.removeAttribute('data-chip');
-        });
-
-    } catch (err) {
-        clearTimeout(timeoutId);
-        console.error('❌', err);
-        if (err.name === 'AbortError') {
-            showToast('פסק זמן - השרת לא הגיב', 'error');
-        } else {
-            showToast('שגיאת תקשורת עם השרת', 'error');
-        }
-        // עצירה במקרה של שגיאה
-        await stopSpinOnNumber(Math.floor(Math.random() * 37));
-    } finally {
-        state.isSpinning = false;
-        spinBtn.textContent = '🎲 SPIN';
-        wheelContainer.classList.remove('growing');
-        updateUI();
+    .action-btn {
+        padding: 12px;
+        font-size: 0.9rem;
     }
 }
 
-// ============================================================
-//  הצגת תוצאה
-// ============================================================
-function displayResult(data) {
-    resultArea.classList.remove('hidden');
-    const num = data.winningNumber;
-    winningNumberEl.textContent = num;
-
-    if (num === 0) {
-        winningNumberEl.style.color = '#2ecc71';
-    } else if (RED_NUMBERS.includes(num)) {
-        winningNumberEl.style.color = '#e74c3c';
-    } else {
-        winningNumberEl.style.color = '#ffffff';
-    }
-
-    const net = data.totalWin - data.totalBet;
-
-    if (data.totalWin > 0) {
-        winDetailsEl.innerHTML =
-            `<div style="color:#4ade80;font-weight:bold;">🎉 WIN ${data.totalWin}</div>
-             <div style="font-size:0.85em;margin-top:4px;">
-                הימור: ${data.totalBet} | רווח נטו: ${net >= 0 ? '+' : ''}${net}
-             </div>`;
-    } else {
-        winDetailsEl.innerHTML =
-            `<div style="color:#e74c3c;font-weight:bold;">😢 LOSS</div>
-             <div style="font-size:0.85em;margin-top:4px;">הפסדת ${data.totalBet}</div>`;
-    }
-}
-
-// ============================================================
-//  היסטוריה
-// ============================================================
-function updateHistory() {
-    historyList.innerHTML = '';
-    if (state.history.length === 0) {
-        historyList.innerHTML = '<span class="no-history">—</span>';
-        return;
-    }
-
-    state.history.forEach(num => {
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        item.textContent = num;
-
-        if (num === 0) {
-            item.style.background = '#0e8a4a';
-        } else if (RED_NUMBERS.includes(num)) {
-            item.style.background = '#b71c1c';
-        } else {
-            item.style.background = '#0a0a0a';
-        }
-
-        historyList.appendChild(item);
-    });
-}
-
-// ============================================================
-//  אירועים ואתחול
-// ============================================================
-function init() {
-    spinBtn.addEventListener('click', spin);
-    clearBtn.addEventListener('click', clearBets);
-
-    buildNumbersGrid();
-    buildWheel();
-    setupChips();
-    updateUI();
-
-    console.log('✅ Royal Roulette אותחל');
-}
-
-// הפעלה בטוחה
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
+@media (max-width: 380px) {
+    .bet-btn { min-height: 32px; font-size: 0.7rem; }
+    .numbers-grid { min-height: 100px; gap: 3px; }
+    .chip { width: 42px; height: 42px; font-size: 0.8rem; }
 }
