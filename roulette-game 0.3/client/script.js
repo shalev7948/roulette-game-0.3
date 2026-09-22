@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v5 - Realistic Wheel)
+ *  European Roulette - Client (v5 Final)
  * ============================================================
  */
 
@@ -42,7 +42,6 @@ const chipsContainer = $('chips');
 // ============================================================
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
-// סדר המספרים על גלגל רולטה אירופי אמיתי (סדר היצרן - נגד כיוון השעון)
 const WHEEL_ORDER = [
     0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10,
     5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
@@ -79,7 +78,6 @@ function buildNumbersGrid() {
             btn.dataset.type = 'straight';
             btn.dataset.numbers = num;
             btn.dataset.key = 'straight-' + num;
-            btn.setAttribute('aria-label', 'הימור על ' + num);
 
             if (RED_NUMBERS.includes(num)) {
                 btn.classList.add('red');
@@ -98,47 +96,26 @@ function buildNumbersGrid() {
 // ============================================================
 function buildWheel() {
     const svgNS = 'http://www.w3.org/2000/svg';
-    const size = 400;              // קוטב הגלגל ביחידות SVG
-    const center = size / 2;       // מרכז
-    const outerR = 195;            // רדיוס חיצוני (מקטעים)
-    const innerR = 130;            // רדיוס פנימי (תחילת המקטע)
-    const textR = 168;             // רדיוס הטקסט
-    const total = WHEEL_ORDER.length; // 37
-    const anglePer = 360 / total;  // ~9.73°
+    const size = 400;
+    const center = size / 2;
+    const outerR = 195;
+    const innerR = 130;
+    const textR = 165;
+    const total = WHEEL_ORDER.length;
+    const anglePer = 360 / total;
 
-    // ניקוי
     wheelNumbersEl.innerHTML = '';
 
-    // יצירת SVG
     const svg = document.createElementNS(svgNS, 'svg');
     svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
     svg.setAttribute('class', 'wheel-svg');
     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.style.width = '100%';
+    svg.style.height = '100%';
+    svg.style.display = 'block';
 
-    // ============================================================
-    //  הגדרות צבעים
-    // ============================================================
-    const colorGreen = '#0d8a3e';
-    const colorRed = '#c8102e';
-    const colorBlack = '#1a1a1a';
-
-    // ============================================================
-    //  רקע חיצוני (טבעת זהב)
-    // ============================================================
-    const outerRing = document.createElementNS(svgNS, 'circle');
-    outerRing.setAttribute('cx', center);
-    outerRing.setAttribute('cy', center);
-    outerRing.setAttribute('r', outerR + 8);
-    outerRing.setAttribute('fill', 'url(#goldGrad)');
-    outerRing.setAttribute('stroke', '#6b4a0f');
-    outerRing.setAttribute('stroke-width', '2');
-    svg.appendChild(outerRing);
-
-    // ============================================================
-    //  הגדרת גרדיאנטים
-    // ============================================================
     const defs = document.createElementNS(svgNS, 'defs');
-    
+
     // גרדיאנט זהב
     const goldGrad = document.createElementNS(svgNS, 'radialGradient');
     goldGrad.setAttribute('id', 'goldGrad');
@@ -179,28 +156,33 @@ function buildWheel() {
 
     svg.appendChild(defs);
 
-    // ============================================================
-    //  יצירת 37 מקטעים
-    // ============================================================
-    const startOffset = -90 - (anglePer / 2); // מתחילים מלמעלה, ומיישרים את המקטע הראשון למרכז החץ
+    // --- טבעת זהב חיצונית ---
+    const outerRing = document.createElementNS(svgNS, 'circle');
+    outerRing.setAttribute('cx', center);
+    outerRing.setAttribute('cy', center);
+    outerRing.setAttribute('r', outerR + 8);
+    outerRing.setAttribute('fill', 'url(#goldGrad)');
+    outerRing.setAttribute('stroke', '#6b4a0f');
+    outerRing.setAttribute('stroke-width', '2');
+    svg.appendChild(outerRing);
+
+    // --- 37 מקטעים ---
+    const startOffset = -90 - (anglePer / 2);
 
     WHEEL_ORDER.forEach((num, idx) => {
         const startAngle = startOffset + idx * anglePer;
         const endAngle = startAngle + anglePer;
         const midAngle = (startAngle + endAngle) / 2;
 
-        // --- צבע המקטע ---
         let fillColor;
         if (num === 0) {
-            fillColor = colorGreen;
+            fillColor = '#0d8a3e';
         } else if (RED_NUMBERS.includes(num)) {
-            fillColor = colorRed;
+            fillColor = '#c8102e';
         } else {
-            fillColor = colorBlack;
+            fillColor = '#1a1a1a';
         }
 
-        // --- חישוב נקודות הפוליגון (מקטע) ---
-        // 4 פינות: inner-start, outer-start, outer-end, inner-end
         const startRad = (startAngle * Math.PI) / 180;
         const endRad = (endAngle * Math.PI) / 180;
 
@@ -213,24 +195,22 @@ function buildWheel() {
         const x4 = center + innerR * Math.cos(endRad);
         const y4 = center + innerR * Math.sin(endRad);
 
-        const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
-
         const polygon = document.createElementNS(svgNS, 'polygon');
-        polygon.setAttribute('points', points);
+        polygon.setAttribute('points', `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`);
         polygon.setAttribute('fill', fillColor);
         polygon.setAttribute('stroke', '#d4af37');
-        polygon.setAttribute('stroke-width', '0.5');
+        polygon.setAttribute('stroke-width', '0.6');
         svg.appendChild(polygon);
 
-        // --- מפריד לבן דק בין המקטעים ---
-        const separator = document.createElementNS(svgNS, 'line');
-        separator.setAttribute('x1', center + innerR * Math.cos(startRad));
-        separator.setAttribute('y1', center + innerR * Math.sin(startRad));
-        separator.setAttribute('x2', center + outerR * Math.cos(startRad));
-        separator.setAttribute('y2', center + outerR * Math.sin(startRad));
-        separator.setAttribute('stroke', 'rgba(212, 175, 55, 0.4)');
-        separator.setAttribute('stroke-width', '0.7');
-        svg.appendChild(separator);
+        // --- מפריד בין המקטעים ---
+        const sep = document.createElementNS(svgNS, 'line');
+        sep.setAttribute('x1', center + innerR * Math.cos(startRad));
+        sep.setAttribute('y1', center + innerR * Math.sin(startRad));
+        sep.setAttribute('x2', center + outerR * Math.cos(startRad));
+        sep.setAttribute('y2', center + outerR * Math.sin(startRad));
+        sep.setAttribute('stroke', 'rgba(212, 175, 55, 0.5)');
+        sep.setAttribute('stroke-width', '0.8');
+        svg.appendChild(sep);
 
         // --- טקסט המספר ---
         const textRad = (midAngle * Math.PI) / 180;
@@ -246,27 +226,22 @@ function buildWheel() {
         text.setAttribute('font-family', 'Arial, sans-serif');
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('dominant-baseline', 'central');
-        // סיבוב הטקסט כך שיהיה בכיוון הרדיאלי
         text.setAttribute('transform', `rotate(${midAngle + 90} ${tx} ${ty})`);
-        text.setAttribute('style', 'text-shadow: 0 0 3px rgba(0,0,0,0.9);');
         text.textContent = num;
         svg.appendChild(text);
 
-        // --- נקודת מסמן (מסמר) בחלק החיצוני ---
-        const dotX = center + (outerR - 8) * Math.cos(textRad);
-        const dotY = center + (outerR - 8) * Math.sin(textRad);
+        // --- מסמר חיצוני ---
+        const dotX = center + (outerR - 6) * Math.cos(textRad);
+        const dotY = center + (outerR - 6) * Math.sin(textRad);
         const dot = document.createElementNS(svgNS, 'circle');
         dot.setAttribute('cx', dotX);
         dot.setAttribute('cy', dotY);
-        dot.setAttribute('r', '1.5');
+        dot.setAttribute('r', '1.6');
         dot.setAttribute('fill', '#f9e79f');
-        dot.setAttribute('opacity', '0.9');
         svg.appendChild(dot);
     });
 
-    // ============================================================
-    //  טבעת פנימית (מעל המקטעים)
-    // ============================================================
+    // --- טבעת פנימית ---
     const innerRing = document.createElementNS(svgNS, 'circle');
     innerRing.setAttribute('cx', center);
     innerRing.setAttribute('cy', center);
@@ -276,9 +251,7 @@ function buildWheel() {
     innerRing.setAttribute('stroke-width', '2');
     svg.appendChild(innerRing);
 
-    // ============================================================
-    //  אזור המרכז המוזהב
-    // ============================================================
+    // --- מרכז זהוב ---
     const hub = document.createElementNS(svgNS, 'circle');
     hub.setAttribute('cx', center);
     hub.setAttribute('cy', center);
@@ -288,16 +261,14 @@ function buildWheel() {
     hub.setAttribute('stroke-width', '2');
     svg.appendChild(hub);
 
-    // ============================================================
-    //  8 זרועות (spokes) של הגלגל
-    // ============================================================
+    // --- 8 זרועות ---
     for (let s = 0; s < 8; s++) {
         const sAngle = (s * 45) * Math.PI / 180;
         const x1 = center + 25 * Math.cos(sAngle);
         const y1 = center + 25 * Math.sin(sAngle);
         const x2 = center + (innerR - 20) * Math.cos(sAngle);
         const y2 = center + (innerR - 20) * Math.sin(sAngle);
-        
+
         const spoke = document.createElementNS(svgNS, 'line');
         spoke.setAttribute('x1', x1);
         spoke.setAttribute('y1', y1);
@@ -310,9 +281,7 @@ function buildWheel() {
         svg.appendChild(spoke);
     }
 
-    // ============================================================
-    //  מרכז המרכז (הציר)
-    // ============================================================
+    // --- ציר מרכזי ---
     const axle = document.createElementNS(svgNS, 'circle');
     axle.setAttribute('cx', center);
     axle.setAttribute('cy', center);
@@ -330,9 +299,6 @@ function buildWheel() {
     axleDot.setAttribute('opacity', '0.85');
     svg.appendChild(axleDot);
 
-    // ============================================================
-    //  הוספה ל-DOM
-    // ============================================================
     wheelNumbersEl.appendChild(svg);
 }
 
@@ -371,12 +337,7 @@ function handleBetClick(btn) {
             return;
         }
 
-        state.bets.push({
-            type,
-            numbers,
-            amount: state.betAmount,
-            key
-        });
+        state.bets.push({ type, numbers, amount: state.betAmount, key });
         btn.classList.add('selected');
         btn.setAttribute('data-chip', state.betAmount);
     }
@@ -508,7 +469,7 @@ async function spin() {
             try {
                 const errBody = await response.json();
                 errMsg = errBody.error || errMsg;
-            } catch (_) { /* ignore */ }
+            } catch (_) {}
             showToast('שגיאת שרת: ' + errMsg, 'error');
             await stopSpinOnNumber(Math.floor(Math.random() * 37));
             return;
@@ -620,4 +581,18 @@ function updateHistory() {
 // ============================================================
 function init() {
     spinBtn.addEventListener('click', spin);
-    clearBtn.addEventListener('click', clearBet
+    clearBtn.addEventListener('click', clearBets);
+
+    buildNumbersGrid();
+    buildWheel();
+    setupChips();
+    updateUI();
+
+    console.log('✅ Royal Roulette v5 אותחל');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
