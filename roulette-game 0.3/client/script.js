@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v5 Final)
+ *  European Roulette - Client (v6 Final)
  * ============================================================
  */
 
@@ -77,7 +77,6 @@ function buildNumbersGrid() {
             btn.textContent = num;
             btn.dataset.type = 'straight';
             btn.dataset.numbers = num;
-            btn.dataset.key = 'straight-' + num;
 
             if (RED_NUMBERS.includes(num)) {
                 btn.classList.add('red');
@@ -299,14 +298,18 @@ function handleBetClick(btn) {
 
     const type = btn.dataset.type;
     const numbersRaw = btn.dataset.numbers;
-    const key = btn.dataset.key || (type + '-' + numbersRaw);
 
-    if (!type || !key) return;
+    if (!type) return;
 
     let numbers = [];
     if (numbersRaw && numbersRaw.trim() !== '') {
         numbers = numbersRaw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
     }
+
+    // בניית key ייחודי
+    const key = type + '-' + (numbers.length > 0 ? numbers.join(',') : 'empty');
+
+    console.log('🎯 נלחץ כפתור:', { type, numbers, key });
 
     const existingIdx = state.bets.findIndex(b => b.key === key);
 
@@ -330,6 +333,8 @@ function handleBetClick(btn) {
         btn.classList.add('selected');
         btn.setAttribute('data-chip', state.betAmount);
     }
+
+    console.log('   הימורים אחרי:', state.bets);
 
     updateUI();
 }
@@ -577,7 +582,7 @@ function init() {
     setupChips();
     updateUI();
 
-    console.log('✅ Royal Roulette v5 אותחל');
+    console.log('✅ Royal Roulette v6 אותחל');
 }
 
 if (document.readyState === 'loading') {
