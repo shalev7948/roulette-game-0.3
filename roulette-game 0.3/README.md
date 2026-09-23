@@ -2,17 +2,20 @@
 
 משחק רולטה אירופית מלא עם שרת Node.js ו-RNG בצד השרת.
 
+---
+
 ## 🚀 הרצה מקומית
 
 ### דרישות
-- Node.js 14+
+- Node.js 14 ומעלה
+- npm
 
 ### שלבים
 
 \`\`\`bash
 # 1. שכפל את הפרויקט
-git clone https://github.com/YOUR_USERNAME/roulette-game.git
-cd roulette-game
+git clone https://github.com/shalev7940/roulette-game-0.3.git
+cd roulette-game-0.3
 
 # 2. התקן תלויות
 npm install
@@ -23,60 +26,48 @@ npm start
 
 פתח דפדפן בכתובת: **http://localhost:3000**
 
+**חשוב:** השרת חייב לרוץ ברקע. אם תסגור את הטרמינל, המשחק יפסיק לעבוד.
+
+---
+
 ## 🌐 הרצה בענן (Render)
 
+המשחק מועלה ופועל ב-Render:
+
+**כתובת:** https://roulette-game-0-3.onrender.com
+
+### העלאה מחדש (אם צריך):
 1. העלה את הקוד ל-GitHub.
 2. הירשם ל-https://render.com.
 3. New → Web Service → בחר את הריפו.
-4. Build Command: \`npm install\`
-5. Start Command: \`npm start\`
-6. Instance Type: \`Free\`
+4. **Root Directory:** `roulette-game 0.3`
+5. **Build Command:** `npm install`
+6. **Start Command:** `npm start`
+7. **Instance Type:** `Free`
+
+---
 
 ## 🎮 איך משחקים
 
-1. בחר צ'יפ (1, 5, 10, 25, 100).
-2. לחץ על מספר, אדום/שחור, זוגי/אי-זוגי, 1-18/19-36, תריסר או טור.
-3. לחץ **SPIN**.
-4. התוצאה מגיעה מהשרת ומתעדכנת במסך.
+1. **בחר צ'יפ** - לחץ על אחד מהצ'יפים: 1, 5, 10, 25, 100.
+2. **הצב הימור** - לחץ על:
+   - **מספר בודד** (straight) - 35:1
+   - **אדום/שחור** - 1:1
+   - **זוגי/אי-זוגי** - 1:1
+   - **1-18 / 19-36** - 1:1
+   - **תריסר** (1st/2nd/3rd 12) - 2:1
+   - **טור** (2:1) - 2:1
+3. **הימורים מרובים** - אפשר להציב כמה הימורים בסיבוב אחד.
+4. **בטל הימור** - לחץ שוב על אותו כפתור.
+5. **נקה הכל** - כפתור CLEAR.
+6. **סובב** - כפתור SPIN.
 
-## 🏗️ ארכיטקטורה
+לאחר הסיבוב:
+- המספר הזוכה מוצג על הגלגל.
+- הזכיות מוצגות.
+- היתרה מתעדכנת.
+- התוצאה נשמרת בהיסטוריה.
 
-- **Frontend:** HTML, CSS, JavaScript (vanilla).
-- **Backend:** Node.js + Express.
-- **תקשורת:** POST `/api/spin` עם JSON.
-- **RNG:** בצד השרת בלבד (מקור אמת).
+---
 
-### דוגמת בקשה
-
-\`\`\`json
-{
-  "bets": [
-    { "type": "straight", "numbers": [7], "amount": 10 },
-    { "type": "red", "numbers": [], "amount": 20 }
-  ],
-  "balance": 1000
-}
-\`\`\`
-
-### דוגמת תשובה
-
-\`\`\`json
-{
-  "success": true,
-  "data": {
-    "winningNumber": 23,
-    "totalBet": 30,
-    "totalWin": 20,
-    "newBalance": 990,
-    "betResults": [...]
-  }
-}
-\`\`\`
-
-## 📱 תמיכה במובייל
-
-המשחק רספונסיבי לחלוטין – עובד בדסקטופ ובמובייל (כולל portrait).
-
-## 📜 רישיון
-
-פרויקט למטרת לימוד בלבד.
+## 🔄 זרימת המשחק
