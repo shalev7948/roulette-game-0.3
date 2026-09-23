@@ -116,11 +116,11 @@ npm start
 - הלקוח לא יוצר מספרים אקראיים.
 - השרת הוא מקור האמת הבלעדי לתוצאת הסיבוב.
 
----
+---## 📋 דוגמאות בקשות ותשובות
 
-## 📋 דוגמאות בקשות ותשובות
+### בקשת סיבוב (Request)
 
-### בקשת סיבוב:
+```http
 POST /api/spin
 Content-Type: application/json
 
@@ -131,8 +131,11 @@ Content-Type: application/json
   ],
   "balance": 1000
 }
+```
 
-### תשובת שרת (הצלחה):
+### תשובת שרת - הצלחה (Response)
+
+```json
 {
   "success": true,
   "data": {
@@ -141,37 +144,52 @@ Content-Type: application/json
     "totalWin": 20,
     "newBalance": 990,
     "betResults": [
-      { "type": "straight", "numbers": [7], "amount": 10, "win": 0, "isWinner": false },
-      { "type": "red", "numbers": [], "amount": 20, "win": 20, "isWinner": true }
+      {
+        "type": "straight",
+        "numbers": [7],
+        "amount": 10,
+        "win": 0,
+        "isWinner": false
+      },
+      {
+        "type": "red",
+        "numbers": [],
+        "amount": 20,
+        "win": 20,
+        "isWinner": true
+      }
     ],
     "timestamp": "2024-01-15T10:30:00.000Z"
   }
 }
+```
 
-### תשובת שרת (שגיאה):
+### תשובת שרת - שגיאה (Error)
+
+```json
 {
   "success": false,
   "error": "Insufficient balance"
 }
+```
 
 ### סוגי הימורים נתמכים
 
-מספר בודד (straight) - 35:1 - דוגמה: { "type": "straight", "numbers": [7], "amount": 10 }
-אדום (red) - 1:1 - דוגמה: { "type": "red", "numbers": [], "amount": 20 }
-שחור (black) - 1:1 - דוגמה: { "type": "black", "numbers": [], "amount": 20 }
-זוגי (even) - 1:1 - דוגמה: { "type": "even", "numbers": [], "amount": 20 }
-אי-זוגי (odd) - 1:1 - דוגמה: { "type": "odd", "numbers": [], "amount": 20 }
-1-18 (low) - 1:1 - דוגמה: { "type": "low", "numbers": [], "amount": 20 }
-19-36 (high) - 1:1 - דוגמה: { "type": "high", "numbers": [], "amount": 20 }
-תריסר ראשון (dozen=1) - 2:1 - דוגמה: { "type": "dozen", "numbers": [1], "amount": 20 }
-תריסר שני (dozen=2) - 2:1 - דוגמה: { "type": "dozen", "numbers": [2], "amount": 20 }
-תריסר שלישי (dozen=3) - 2:1 - דוגמה: { "type": "dozen", "numbers": [3], "amount": 20 }
-טור 1 (column=1) - 2:1 - דוגמה: { "type": "column", "numbers": [1], "amount": 20 }
-טור 2 (column=2) - 2:1 - דוגמה: { "type": "column", "numbers": [2], "amount": 20 }
-טור 3 (column=3) - 2:1 - דוגמה: { "type": "column", "numbers": [3], "amount": 20 }
-
----
-
+| סוג | קוד | תשלום | דוגמה |
+|------|-----|--------|--------|
+| מספר בודד | `straight` | 35:1 | `{ "type": "straight", "numbers": [7], "amount": 10 }` |
+| אדום | `red` | 1:1 | `{ "type": "red", "numbers": [], "amount": 20 }` |
+| שחור | `black` | 1:1 | `{ "type": "black", "numbers": [], "amount": 20 }` |
+| זוגי | `even` | 1:1 | `{ "type": "even", "numbers": [], "amount": 20 }` |
+| אי-זוגי | `odd` | 1:1 | `{ "type": "odd", "numbers": [], "amount": 20 }` |
+| 1-18 | `low` | 1:1 | `{ "type": "low", "numbers": [], "amount": 20 }` |
+| 19-36 | `high` | 1:1 | `{ "type": "high", "numbers": [], "amount": 20 }` |
+| תריסר ראשון | `dozen=1` | 2:1 | `{ "type": "dozen", "numbers": [1], "amount": 20 }` |
+| תריסר שני | `dozen=2` | 2:1 | `{ "type": "dozen", "numbers": [2], "amount": 20 }` |
+| תריסר שלישי | `dozen=3` | 2:1 | `{ "type": "dozen", "numbers": [3], "amount": 20 }` |
+| טור 1 | `column=1` | 2:1 | `{ "type": "column", "numbers": [1], "amount": 20 }` |
+| טור 2 | `column=2` | 2:1 | `{ "type": "column", "numbers": [2], "amount": 20 }` |
+| טור 3 | `column=3` | 2:1 | `{ "type": "column", "numbers": [3], "amount": 20 }` |
 ## 🔍 חקר המשחק הקיים (Spinomenal)
 
 ניתחתי את Spinomenal European Roulette עם Chrome DevTools.
