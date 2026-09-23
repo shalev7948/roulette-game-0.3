@@ -13,7 +13,7 @@
 ### שלבים
 
 שכפל את הפרויקט:
-git clone https://github.com/shalev7940/roulette-game-0.3.git
+git clone [https://github.com/shalev7940/roulette-game-0.3.git](https://github.com/shalev7948/roulette-game-0.3)
 cd roulette-game-0.3
 
 התקן תלויות:
