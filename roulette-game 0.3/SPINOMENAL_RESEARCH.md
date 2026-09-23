@@ -1,3 +1,5 @@
+חשוב לציין שמסמך זה נכתב בעזרת בינה מלאכותית
+
 # חקר Spinomenal European Roulette
 
 ## מטרה
@@ -122,6 +124,3 @@ Content-Type: application/json
   ],
   "balance": 1000
 }
-
-
-חשוב לציין שמסמך זה נכתב בעזרת בינה מלאכותית
