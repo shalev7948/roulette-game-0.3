@@ -210,20 +210,22 @@ Content-Type: application/json
 - רספונסיבי לדסקטופ ולמובייל.
 
 ---
+ ## 📁 מבנה הפרויקט
 
-## 📁 מבנה הפרויקט
+**roulette-game-0.3/** - תיקיית הפרויקט הראשית
 
-roulette-game-0.3/
-├── package.json               # תלויות וסקריפטים
-├── README.md                  # הקובץ הזה
-├── SPINOMENAL_RESEARCH.md     # תיעוד חקר Spinomenal
-├── client/                    # צד הלקוח
-│   ├── index.html             # מסך המשחק
-│   ├── style.css              # עיצוב
-│   └── script.js              # לוגיקה
-└── server/                    # צד השרת
-    └── server.js              # Express + RNG
+- **package.json** - תלויות הפרויקט וסקריפטים (הרצה, התקנה)
+- **README.md** - הקובץ הזה - הוראות הרצה ותיעוד כללי
+- **SPINOMENAL_RESEARCH.md** - תיעוד חקר המשחק הקיים של Spinomenal
 
+- **client/** - צד הלקוח (Frontend)
+  - **index.html** - מסך המשחק - כל המבנה של המשחק
+  - **style.css** - עיצוב - כל ה-CSS של המשחק
+  - **script.js** - לוגיקה - ניהול הימורים, תקשורת עם השרת, אנימציה
+
+- **server/** - צד השרת (Backend)
+  - **server.js** - Express + RNG - מטפל בבקשות, מייצר מספרים אקראיים, מחשב זכיות
+  
 ---
 
 ## 📱 תמיכה במובייל
