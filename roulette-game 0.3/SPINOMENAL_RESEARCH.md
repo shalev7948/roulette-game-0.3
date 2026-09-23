@@ -78,7 +78,7 @@
 | היבט | Spinomenal | המימוש שלי |
 |------|------------|------------|
 | תקשורת | WebSocket (מוצפן) | REST API (JSON) |
-| Session | יש | אין (אין login במטלה) |
+| Session | ✓ אין | אין  |
 | RNG | בצד השרת | בצד השרת ✓ |
 | סוגי הימורים | Straight, Red/Black, Odd/Even, Low/High, Dozens, Columns | זהה ✓ |
 | תשלומים | 35:1, 1:1, 2:1 | זהה ✓ |
