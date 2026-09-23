@@ -255,3 +255,5 @@ roulette-game-0.3/
 ## 👤 יוצר
 
 Shalev - Vibe Coding Exercise
+
+חשוב לציין שמסמך זה נכתב בעזרת בינה מלאכותית
