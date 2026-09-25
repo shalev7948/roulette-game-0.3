@@ -852,4 +852,11 @@ function init() {
     setupChips();
     updateUI();
 
-    console
+    console.log('✅ Royal Roulette v11 הופעל');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
