@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v7 Final)
+ *  European Roulette - Client (v8 - Ball Animation)
  * ============================================================
  */
 
@@ -14,6 +14,7 @@ const state = {
     history: [],
     betAmount: 10,
     wheelAngle: 0,
+    ballAngle: 0,
     animationId: null
 };
 
@@ -90,7 +91,7 @@ function buildNumbersGrid() {
 }
 
 // ============================================================
-//  בניית הגלגל הריאליסטי עם SVG
+//  בניית הגלגל הריאליסטי עם SVG + כדור
 // ============================================================
 function buildWheel() {
     const svgNS = 'http://www.w3.org/2000/svg';
@@ -114,6 +115,7 @@ function buildWheel() {
 
     const defs = document.createElementNS(svgNS, 'defs');
 
+    // גרדיאנט זהב
     const goldGrad = document.createElementNS(svgNS, 'radialGradient');
     goldGrad.setAttribute('id', 'goldGrad');
     goldGrad.setAttribute('cx', '35%');
@@ -132,6 +134,7 @@ function buildWheel() {
     goldGrad.appendChild(gs3);
     defs.appendChild(goldGrad);
 
+    // גרדיאנט למרכז
     const hubGrad = document.createElementNS(svgNS, 'radialGradient');
     hubGrad.setAttribute('id', 'hubGrad');
     hubGrad.setAttribute('cx', '35%');
@@ -150,8 +153,28 @@ function buildWheel() {
     hubGrad.appendChild(hs3);
     defs.appendChild(hubGrad);
 
+    // גרדיאנט לכדור
+    const ballGrad = document.createElementNS(svgNS, 'radialGradient');
+    ballGrad.setAttribute('id', 'ballGrad');
+    ballGrad.setAttribute('cx', '35%');
+    ballGrad.setAttribute('cy', '30%');
+    const bs1 = document.createElementNS(svgNS, 'stop');
+    bs1.setAttribute('offset', '0%');
+    bs1.setAttribute('stop-color', '#ffffff');
+    const bs2 = document.createElementNS(svgNS, 'stop');
+    bs2.setAttribute('offset', '70%');
+    bs2.setAttribute('stop-color', '#e8e8e8');
+    const bs3 = document.createElementNS(svgNS, 'stop');
+    bs3.setAttribute('offset', '100%');
+    bs3.setAttribute('stop-color', '#999999');
+    ballGrad.appendChild(bs1);
+    ballGrad.appendChild(bs2);
+    ballGrad.appendChild(bs3);
+    defs.appendChild(ballGrad);
+
     svg.appendChild(defs);
 
+    // --- טבעת זהב חיצונית ---
     const outerRing = document.createElementNS(svgNS, 'circle');
     outerRing.setAttribute('cx', center);
     outerRing.setAttribute('cy', center);
@@ -161,6 +184,13 @@ function buildWheel() {
     outerRing.setAttribute('stroke-width', '2');
     svg.appendChild(outerRing);
 
+    // --- קבוצת הגלגל (מסתובב לאט) ---
+    const wheelGroup = document.createElementNS(svgNS, 'g');
+    wheelGroup.setAttribute('id', 'wheel-group');
+    wheelGroup.style.transformOrigin = `${center}px ${center}px`;
+    svg.appendChild(wheelGroup);
+
+    // --- 37 מקטעים ---
     const startOffset = -90 - (anglePer / 2);
 
     WHEEL_ORDER.forEach((num, idx) => {
@@ -194,7 +224,7 @@ function buildWheel() {
         polygon.setAttribute('fill', fillColor);
         polygon.setAttribute('stroke', '#d4af37');
         polygon.setAttribute('stroke-width', '0.6');
-        svg.appendChild(polygon);
+        wheelGroup.appendChild(polygon);
 
         const sep = document.createElementNS(svgNS, 'line');
         sep.setAttribute('x1', center + innerR * Math.cos(startRad));
@@ -203,7 +233,7 @@ function buildWheel() {
         sep.setAttribute('y2', center + outerR * Math.sin(startRad));
         sep.setAttribute('stroke', 'rgba(212, 175, 55, 0.5)');
         sep.setAttribute('stroke-width', '0.8');
-        svg.appendChild(sep);
+        wheelGroup.appendChild(sep);
 
         const textRad = (midAngle * Math.PI) / 180;
         const tx = center + textR * Math.cos(textRad);
@@ -220,7 +250,7 @@ function buildWheel() {
         text.setAttribute('dominant-baseline', 'central');
         text.setAttribute('transform', `rotate(${midAngle + 90} ${tx} ${ty})`);
         text.textContent = num;
-        svg.appendChild(text);
+        wheelGroup.appendChild(text);
 
         const dotX = center + (outerR - 6) * Math.cos(textRad);
         const dotY = center + (outerR - 6) * Math.sin(textRad);
@@ -229,9 +259,10 @@ function buildWheel() {
         dot.setAttribute('cy', dotY);
         dot.setAttribute('r', '1.6');
         dot.setAttribute('fill', '#f9e79f');
-        svg.appendChild(dot);
+        wheelGroup.appendChild(dot);
     });
 
+    // --- טבעת פנימית ---
     const innerRing = document.createElementNS(svgNS, 'circle');
     innerRing.setAttribute('cx', center);
     innerRing.setAttribute('cy', center);
@@ -239,8 +270,9 @@ function buildWheel() {
     innerRing.setAttribute('fill', 'none');
     innerRing.setAttribute('stroke', '#d4af37');
     innerRing.setAttribute('stroke-width', '2');
-    svg.appendChild(innerRing);
+    wheelGroup.appendChild(innerRing);
 
+    // --- מרכז זהוב ---
     const hub = document.createElementNS(svgNS, 'circle');
     hub.setAttribute('cx', center);
     hub.setAttribute('cy', center);
@@ -248,8 +280,9 @@ function buildWheel() {
     hub.setAttribute('fill', 'url(#hubGrad)');
     hub.setAttribute('stroke', '#5c4508');
     hub.setAttribute('stroke-width', '2');
-    svg.appendChild(hub);
+    wheelGroup.appendChild(hub);
 
+    // --- 8 זרועות ---
     for (let s = 0; s < 8; s++) {
         const sAngle = (s * 45) * Math.PI / 180;
         const x1 = center + 25 * Math.cos(sAngle);
@@ -266,9 +299,10 @@ function buildWheel() {
         spoke.setAttribute('stroke-width', '4');
         spoke.setAttribute('stroke-linecap', 'round');
         spoke.setAttribute('opacity', '0.85');
-        svg.appendChild(spoke);
+        wheelGroup.appendChild(spoke);
     }
 
+    // --- ציר מרכזי ---
     const axle = document.createElementNS(svgNS, 'circle');
     axle.setAttribute('cx', center);
     axle.setAttribute('cy', center);
@@ -276,7 +310,7 @@ function buildWheel() {
     axle.setAttribute('fill', 'url(#hubGrad)');
     axle.setAttribute('stroke', '#5c4508');
     axle.setAttribute('stroke-width', '1.5');
-    svg.appendChild(axle);
+    wheelGroup.appendChild(axle);
 
     const axleDot = document.createElementNS(svgNS, 'circle');
     axleDot.setAttribute('cx', center);
@@ -284,7 +318,29 @@ function buildWheel() {
     axleDot.setAttribute('r', '6');
     axleDot.setAttribute('fill', '#fff8dc');
     axleDot.setAttribute('opacity', '0.85');
-    svg.appendChild(axleDot);
+    wheelGroup.appendChild(axleDot);
+
+    // ============================================================
+    //  הכדור - מסתובב על היקף פנימי
+    // ============================================================
+    const ballRadius = 6;
+    const ballOrbit = outerR - 15; // מרחק מהמרכז
+
+    // אנחנו מציבים את הכדור במרכז, ומסובבים את הקבוצה סביב המרכז
+    const ballGroup = document.createElementNS(svgNS, 'g');
+    ballGroup.setAttribute('id', 'roulette-ball-group');
+    ballGroup.style.transformOrigin = `${center}px ${center}px`;
+
+    const ball = document.createElementNS(svgNS, 'circle');
+    ball.setAttribute('cx', center);
+    ball.setAttribute('cy', center - ballOrbit);
+    ball.setAttribute('r', ballRadius);
+    ball.setAttribute('fill', 'url(#ballGrad)');
+    ball.setAttribute('stroke', '#666');
+    ball.setAttribute('stroke-width', '0.5');
+    ball.setAttribute('filter', 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7))');
+    ballGroup.appendChild(ball);
+    svg.appendChild(ballGroup);
 
     wheelNumbersEl.appendChild(svg);
 }
@@ -306,8 +362,6 @@ function handleBetClick(btn) {
     }
 
     const key = type + '-' + (numbers.length > 0 ? numbers.join(',') : 'empty');
-
-    console.log('🎯 נלחץ כפתור:', { type, numbers, key });
 
     const existingIdx = state.bets.findIndex(b => b.key === key);
 
@@ -331,8 +385,6 @@ function handleBetClick(btn) {
         btn.classList.add('selected');
         btn.setAttribute('data-chip', state.betAmount);
     }
-
-    console.log('   הימורים אחרי:', state.bets);
 
     updateUI();
 }
@@ -383,46 +435,53 @@ function setupChips() {
 
 // ============================================================
 //  Event Delegation - חיבור כל הכפתורים
-//  פותר את הבעיה של כפתורים חיצוניים שלא מגיבים
 // ============================================================
 function attachBetListeners() {
     document.addEventListener('click', (e) => {
-        // כפתור SPIN או CLEAR - דלג
         if (e.target.closest('#spin-btn') || e.target.closest('#clear-btn')) {
             return;
         }
-
-        // כפתור צ'יפ - דלג (מטופל ב-setupChips)
         if (e.target.closest('.chip')) {
             return;
         }
-
-        // חפש את כפתור ההימור הקרוב
         const btn = e.target.closest('.bet-btn');
         if (!btn) return;
-
         e.preventDefault();
         handleBetClick(btn);
     });
 }
 
 // ============================================================
-//  אנימציית סיבוב
+//  אנימציית סיבוב - גלגל איטי + כדור מהיר
 // ============================================================
 function startContinuousSpin() {
+    const wheelGroup = document.getElementById('wheel-group');
+    const ballGroup = document.getElementById('roulette-ball-group');
+
     const startTime = performance.now();
-    const baseSpeed = 360 * 3;
+    const wheelBaseSpeed = 360 * 0.8;   // גלגל - איטי
+    const ballBaseSpeed = -360 * 3.5;   // כדור - מהיר, נגד כיוון
 
     function animate(now) {
         const elapsed = (now - startTime) / 1000;
-        const speed = baseSpeed * Math.max(0.3, 1 - elapsed * 0.15);
-        state.wheelAngle = (state.wheelAngle + speed / 60) % 360;
-        wheelEl.style.transform = `rotate(${state.wheelAngle}deg)`;
+        // האטה הדרגתית
+        const wheelSpeed = wheelBaseSpeed * Math.max(0.5, 1 - elapsed * 0.1);
+        const ballSpeed = ballBaseSpeed * Math.max(0.4, 1 - elapsed * 0.08);
+
+        state.wheelAngle = (state.wheelAngle + wheelSpeed / 60) % 360;
+        state.ballAngle = (state.ballAngle + ballSpeed / 60) % 360;
+
+        if (wheelGroup) wheelGroup.style.transform = `rotate(${state.wheelAngle}deg)`;
+        if (ballGroup) ballGroup.style.transform = `rotate(${state.ballAngle}deg)`;
+
         state.animationId = requestAnimationFrame(animate);
     }
     state.animationId = requestAnimationFrame(animate);
 }
 
+// ============================================================
+//  עצירה - הכדור נוחת על המספר הזוכה
+// ============================================================
 function stopSpinOnNumber(winningNumber) {
     return new Promise(resolve => {
         if (state.animationId) {
@@ -430,19 +489,56 @@ function stopSpinOnNumber(winningNumber) {
             state.animationId = null;
         }
 
+        const wheelGroup = document.getElementById('wheel-group');
+        const ballGroup = document.getElementById('roulette-ball-group');
+
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePer = 360 / WHEEL_ORDER.length;
-        const targetMod = (360 - (idx * anglePer)) % 360;
-        const currentMod = state.wheelAngle % 360;
-        const delta = (targetMod - currentMod + 360) % 360;
-        const finalAngle = state.wheelAngle + 360 * 5 + delta;
 
-        wheelEl.style.transition = 'transform 4s cubic-bezier(0.15, 0.8, 0.15, 1)';
-        wheelEl.style.transform = `rotate(${finalAngle}deg)`;
-        state.wheelAngle = finalAngle % 360;
+        // ============================================================
+        //  חישוב הזווית של המספר בגלגל:
+        //  המספר idx יושב במרכז המקטע שלו, בזווית:
+        //  startOffset + idx * anglePer + anglePer/2
+        //  כאשר startOffset = -90 - anglePer/2
+        //  לכן: angleOfNumberInWheel = -90 - anglePer/2 + idx * anglePer + anglePer/2
+        //                              = -90 + idx * anglePer
+        // ============================================================
+        const numberAngleInWheel = -90 + idx * anglePer;
+
+        // הגלגל נעצר בזווית אקראית קלה
+        const finalWheelAngle = state.wheelAngle + 360 * 1.5 + (Math.random() * 90 - 45);
+
+        // הזווית של המספר במישור העולמי אחרי סיבוב הגלגל:
+        const numberAngleAfterWheel = numberAngleInWheel + finalWheelAngle;
+
+        // אנחנו רוצים שהכדור יעמוד בזווית 0 (למעלה) ביחס לעולם
+        // לכן הזווית הסופית של הכדור צריכה להיות:
+        // ballAngle = -numberAngleAfterWheel
+        // (כי הכדור מוצב בהתחלה בזווית 0, ואנחנו מסובבים אותו)
+        const targetBallAngle = -numberAngleAfterWheel;
+
+        // הוספת סיבובים שלמים לסיבוב ארוך
+        const currentBallAngle = state.ballAngle;
+        const ballDelta = ((targetBallAngle - currentBallAngle) % 360 + 360) % 360;
+        const finalBallAngle = currentBallAngle + 360 * 5 + ballDelta;
+
+        // --- אנימציה ---
+        if (wheelGroup) {
+            wheelGroup.style.transition = 'transform 4s cubic-bezier(0.15, 0.8, 0.15, 1)';
+            wheelGroup.style.transform = `rotate(${finalWheelAngle}deg)`;
+        }
+
+        if (ballGroup) {
+            ballGroup.style.transition = 'transform 4s cubic-bezier(0.15, 0.9, 0.15, 1)';
+            ballGroup.style.transform = `rotate(${finalBallAngle}deg)`;
+        }
+
+        state.wheelAngle = finalWheelAngle % 360;
+        state.ballAngle = finalBallAngle % 360;
 
         setTimeout(() => {
-            wheelEl.style.transition = '';
+            if (wheelGroup) wheelGroup.style.transition = '';
+            if (ballGroup) ballGroup.style.transition = '';
             resolve();
         }, 4100);
     });
@@ -598,26 +694,17 @@ function updateHistory() {
 //  אתחול
 // ============================================================
 function init() {
-    // 1. בניית הלוח הדינמי
     buildNumbersGrid();
-    
-    // 2. בניית הגלגל
     buildWheel();
-    
-    // 3. חיבור Event Delegation לכל הכפתורים
     attachBetListeners();
-    
-    // 4. כפתורי פעולה
+
     spinBtn.addEventListener('click', spin);
     clearBtn.addEventListener('click', clearBets);
-    
-    // 5. צ'יפים
+
     setupChips();
-    
-    // 6. עדכון ממשק ראשוני
     updateUI();
 
-    console.log('✅ Royal Roulette v7 אותחל');
+    console.log('✅ Royal Roulette v8 אותחל');
 }
 
 window.addEventListener('load', init);
