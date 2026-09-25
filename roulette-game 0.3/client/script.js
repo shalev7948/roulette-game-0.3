@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v9 - Realistic 3D Ball)
+ *  European Roulette - Client (v10 - Fixed Ball + Highlighting)
  * ============================================================
  */
 
@@ -153,9 +153,7 @@ function buildWheel() {
     hubGrad.appendChild(hs3);
     defs.appendChild(hubGrad);
 
-    // ============================================================
-    //  גרדיאנט כדור תלת-ממדי
-    // ============================================================
+    // גרדיאנט כדור תלת-ממדי
     const ballGrad = document.createElementNS(svgNS, 'radialGradient');
     ballGrad.setAttribute('id', 'ballGrad');
     ballGrad.setAttribute('cx', '32%');
@@ -183,9 +181,7 @@ function buildWheel() {
     ballGrad.appendChild(bs5);
     defs.appendChild(ballGrad);
 
-    // ============================================================
-    //  הילה זוהרת לכדור (Glow)
-    // ============================================================
+    // הילה זוהרת לכדור
     const ballGlow = document.createElementNS(svgNS, 'radialGradient');
     ballGlow.setAttribute('id', 'ballGlow');
     ballGlow.setAttribute('cx', '50%');
@@ -207,44 +203,9 @@ function buildWheel() {
     ballGlow.appendChild(bg3);
     defs.appendChild(ballGlow);
 
-    // ============================================================
-    //  פילטר לצל של הכדור
-    // ============================================================
-    const shadowFilter = document.createElementNS(svgNS, 'filter');
-    shadowFilter.setAttribute('id', 'ballShadow');
-    shadowFilter.setAttribute('x', '-50%');
-    shadowFilter.setAttribute('y', '-50%');
-    shadowFilter.setAttribute('width', '200%');
-    shadowFilter.setAttribute('height', '200%');
-    const feGaussian = document.createElementNS(svgNS, 'feGaussianBlur');
-    feGaussian.setAttribute('in', 'SourceAlpha');
-    feGaussian.setAttribute('stdDeviation', '2');
-    const feOffset = document.createElementNS(svgNS, 'feOffset');
-    feOffset.setAttribute('dx', '1');
-    feOffset.setAttribute('dy', '2');
-    feOffset.setAttribute('result', 'offsetblur');
-    const feFlood = document.createElementNS(svgNS, 'feFlood');
-    feFlood.setAttribute('flood-color', 'rgba(0, 0, 0, 0.7)');
-    const feComposite = document.createElementNS(svgNS, 'feComposite');
-    feComposite.setAttribute('in', 'offsetblur');
-    feComposite.setAttribute('in2', 'SourceGraphic');
-    feComposite.setAttribute('operator', 'in');
-    const feMerge = document.createElementNS(svgNS, 'feMerge');
-    const feMergeNode1 = document.createElementNS(svgNS, 'feMergeNode');
-    const feMergeNode2 = document.createElementNS(svgNS, 'feMergeNode');
-    feMergeNode2.setAttribute('in', 'SourceGraphic');
-    feMerge.appendChild(feMergeNode1);
-    feMerge.appendChild(feMergeNode2);
-    shadowFilter.appendChild(feGaussian);
-    shadowFilter.appendChild(feOffset);
-    shadowFilter.appendChild(feFlood);
-    shadowFilter.appendChild(feComposite);
-    shadowFilter.appendChild(feMerge);
-    defs.appendChild(shadowFilter);
-
     svg.appendChild(defs);
 
-    // --- טבעת זהב חיצונית ---
+    // טבעת זהב חיצונית
     const outerRing = document.createElementNS(svgNS, 'circle');
     outerRing.setAttribute('cx', center);
     outerRing.setAttribute('cy', center);
@@ -254,13 +215,13 @@ function buildWheel() {
     outerRing.setAttribute('stroke-width', '2');
     svg.appendChild(outerRing);
 
-    // --- קבוצת הגלגל ---
+    // קבוצת הגלגל
     const wheelGroup = document.createElementNS(svgNS, 'g');
     wheelGroup.setAttribute('id', 'wheel-group');
     wheelGroup.style.transformOrigin = `${center}px ${center}px`;
     svg.appendChild(wheelGroup);
 
-    // --- 37 מקטעים ---
+    // 37 מקטעים
     const startOffset = -90 - (anglePer / 2);
 
     WHEEL_ORDER.forEach((num, idx) => {
@@ -332,7 +293,7 @@ function buildWheel() {
         wheelGroup.appendChild(dot);
     });
 
-    // --- טבעת פנימית ---
+    // טבעת פנימית
     const innerRing = document.createElementNS(svgNS, 'circle');
     innerRing.setAttribute('cx', center);
     innerRing.setAttribute('cy', center);
@@ -342,7 +303,7 @@ function buildWheel() {
     innerRing.setAttribute('stroke-width', '2');
     wheelGroup.appendChild(innerRing);
 
-    // --- מרכז זהוב ---
+    // מרכז זהוב
     const hub = document.createElementNS(svgNS, 'circle');
     hub.setAttribute('cx', center);
     hub.setAttribute('cy', center);
@@ -352,7 +313,7 @@ function buildWheel() {
     hub.setAttribute('stroke-width', '2');
     wheelGroup.appendChild(hub);
 
-    // --- 8 זרועות ---
+    // 8 זרועות
     for (let s = 0; s < 8; s++) {
         const sAngle = (s * 45) * Math.PI / 180;
         const x1 = center + 25 * Math.cos(sAngle);
@@ -372,7 +333,7 @@ function buildWheel() {
         wheelGroup.appendChild(spoke);
     }
 
-    // --- ציר מרכזי ---
+    // ציר מרכזי
     const axle = document.createElementNS(svgNS, 'circle');
     axle.setAttribute('cx', center);
     axle.setAttribute('cy', center);
@@ -400,17 +361,16 @@ function buildWheel() {
     ballGroup.setAttribute('id', 'roulette-ball-group');
     ballGroup.style.transformOrigin = `${center}px ${center}px`;
 
-    // --- צל הכדור (מאחוריו) ---
+    // צל הכדור
     const ballShadow = document.createElementNS(svgNS, 'ellipse');
     ballShadow.setAttribute('cx', center + 1);
     ballShadow.setAttribute('cy', center - ballOrbit + 2);
     ballShadow.setAttribute('rx', ballRadius * 1.1);
     ballShadow.setAttribute('ry', ballRadius * 0.7);
     ballShadow.setAttribute('fill', 'rgba(0, 0, 0, 0.5)');
-    ballShadow.setAttribute('filter', 'url(#ballShadow)');
     ballGroup.appendChild(ballShadow);
 
-    // --- הילה זוהרת ---
+    // הילה זוהרת
     const ballGlowCircle = document.createElementNS(svgNS, 'circle');
     ballGlowCircle.setAttribute('cx', center);
     ballGlowCircle.setAttribute('cy', center - ballOrbit);
@@ -419,7 +379,7 @@ function buildWheel() {
     ballGlowCircle.setAttribute('opacity', '0.6');
     ballGroup.appendChild(ballGlowCircle);
 
-    // --- הכדור עצמו ---
+    // הכדור עצמו
     const ball = document.createElementNS(svgNS, 'circle');
     ball.setAttribute('cx', center);
     ball.setAttribute('cy', center - ballOrbit);
@@ -427,10 +387,9 @@ function buildWheel() {
     ball.setAttribute('fill', 'url(#ballGrad)');
     ball.setAttribute('stroke', '#555');
     ball.setAttribute('stroke-width', '0.8');
-    ball.setAttribute('filter', 'url(#ballShadow)');
     ballGroup.appendChild(ball);
 
-    // --- נקודת אור קטנה (השתקפות) ---
+    // השתקפות
     const ballHighlight = document.createElementNS(svgNS, 'ellipse');
     ballHighlight.setAttribute('cx', center - 2);
     ballHighlight.setAttribute('cy', center - ballOrbit - 2);
@@ -552,20 +511,114 @@ function attachBetListeners() {
 }
 
 // ============================================================
-//  אנימציית סיבוב - איטית ומציאותית
+//  Hover Highlighting - הדגשת מספרים רלוונטיים
+// ============================================================
+
+// מחזיר את רשימת המספרים שמתאימים לסוג ההימור
+function getNumbersForBetType(type, numbers) {
+    switch (type) {
+        case 'straight':
+            return numbers;
+        case 'red':
+            return RED_NUMBERS.slice();
+        case 'black':
+            return [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
+        case 'odd':
+            return Array.from({length: 18}, (_, i) => i * 2 + 1);
+        case 'even':
+            return Array.from({length: 18}, (_, i) => (i + 1) * 2);
+        case 'low':
+            return Array.from({length: 18}, (_, i) => i + 1);
+        case 'high':
+            return Array.from({length: 18}, (_, i) => i + 19);
+        case 'dozen': {
+            const dozen = numbers[0];
+            if (dozen === 1) return Array.from({length: 12}, (_, i) => i + 1);
+            if (dozen === 2) return Array.from({length: 12}, (_, i) => i + 13);
+            if (dozen === 3) return Array.from({length: 12}, (_, i) => i + 25);
+            return [];
+        }
+        case 'column': {
+            const col = numbers[0];
+            const result = [];
+            for (let i = 1; i <= 36; i++) {
+                if (i % 3 === col % 3) result.push(i);
+            }
+            return result;
+        }
+        default:
+            return [];
+    }
+}
+
+// מחיל הדגשה על כל המספרים הרלוונטיים
+function highlightNumbers(numbers) {
+    clearHighlights();
+    numbers.forEach(num => {
+        const btn = numbersGrid.querySelector(`.bet-btn[data-numbers="${num}"]`);
+        if (btn) btn.classList.add('highlighted');
+    });
+}
+
+// מסיר את כל ההדגשות
+function clearHighlights() {
+    document.querySelectorAll('.bet-btn.highlighted').forEach(btn => {
+        btn.classList.remove('highlighted');
+    });
+}
+
+// מחבר hover highlighting לכל כפתורי ההימור
+function setupHoverHighlighting() {
+    document.querySelectorAll('.bet-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            if (state.isSpinning) return;
+            const type = btn.dataset.type;
+            const numbersRaw = btn.dataset.numbers;
+            let numbers = [];
+            if (numbersRaw && numbersRaw.trim() !== '') {
+                numbers = numbersRaw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
+            }
+            const relevantNumbers = getNumbersForBetType(type, numbers);
+            highlightNumbers(relevantNumbers);
+        });
+
+        btn.addEventListener('mouseleave', () => {
+            clearHighlights();
+        });
+    });
+
+    // תמיכה בטאצ' (מובייל)
+    document.addEventListener('touchstart', (e) => {
+        const btn = e.target.closest('.bet-btn');
+        if (!btn) return;
+        const type = btn.dataset.type;
+        const numbersRaw = btn.dataset.numbers;
+        let numbers = [];
+        if (numbersRaw && numbersRaw.trim() !== '') {
+            numbers = numbersRaw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
+        }
+        const relevantNumbers = getNumbersForBetType(type, numbers);
+        highlightNumbers(relevantNumbers);
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+        clearHighlights();
+    });
+}
+
+// ============================================================
+//  אנימציית סיבוב
 // ============================================================
 function startContinuousSpin() {
     const wheelGroup = document.getElementById('wheel-group');
     const ballGroup = document.getElementById('roulette-ball-group');
 
     const startTime = performance.now();
-    // --- מהירויות איטיות יותר ---
-    const wheelBaseSpeed = 360 * 0.5;    // גלגל - מאוד איטי
-    const ballBaseSpeed = -360 * 2.5;    // כדור - מהיר יותר אך לא מוגזם
+    const wheelBaseSpeed = 360 * 0.5;
+    const ballBaseSpeed = -360 * 2.5;
 
     function animate(now) {
         const elapsed = (now - startTime) / 1000;
-        // האטה הדרגתית - איטית יותר לאורך זמן
         const wheelSpeed = wheelBaseSpeed * Math.max(0.4, 1 - elapsed * 0.08);
         const ballSpeed = ballBaseSpeed * Math.max(0.3, 1 - elapsed * 0.06);
 
@@ -581,7 +634,7 @@ function startContinuousSpin() {
 }
 
 // ============================================================
-//  עצירה - הכדור נוחת על המספר הזוכה
+//  עצירה - הכדור נוחת על המספר הזוכה (מתוקן!)
 // ============================================================
 function stopSpinOnNumber(winningNumber) {
     return new Promise(resolve => {
@@ -596,22 +649,28 @@ function stopSpinOnNumber(winningNumber) {
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePer = 360 / WHEEL_ORDER.length;
 
-        // חישוב הזווית של המספר בגלגל
-        const numberAngleInWheel = -90 + idx * anglePer;
+        // --- 1. הגלגל נעצר בזווית אקראית קלה ---
+        const finalWheelAngle = state.wheelAngle + 360 * 1.5 + (Math.random() * 60 - 30);
 
-        // הגלגל נעצר בזווית אקראית קלה
-        const finalWheelAngle = state.wheelAngle + 360 * 1.5 + (Math.random() * 90 - 45);
-        const numberAngleAfterWheel = numberAngleInWheel + finalWheelAngle;
+        // --- 2. זווית המספר בתוך הגלגל ---
+        // המספר idx יושב במרכז המקטע שלו:
+        // midAngle = -90 + idx * anglePer
+        const numberMidAngleInWheel = -90 + idx * anglePer;
 
-        // הזווית הסופית של הכדור - שתי נפילות אקראיות קלות + סיבוב ארוך
-        const targetBallAngle = -numberAngleAfterWheel;
+        // --- 3. זווית המספר במישור העולמי (אחרי סיבוב הגלגל) ---
+        const numberGlobalAngle = numberMidAngleInWheel + finalWheelAngle;
+
+        // --- 4. זווית הכדור ---
+        // הכדור צריך להיות בזווית 0 (למעלה) כשהמספר מגיע למעלה
+        // ballAngle + numberGlobalAngle = 0 (mod 360)
+        const targetBallAngle = -numberGlobalAngle;
+
+        // --- 5. סיבוב ארוך של הכדור ---
         const currentBallAngle = state.ballAngle;
         const ballDelta = ((targetBallAngle - currentBallAngle) % 360 + 360) % 360;
-
-        // --- סיבוב ארוך במיוחד ---
         const finalBallAngle = currentBallAngle + 360 * 8 + ballDelta;
 
-        // --- אנימציה ---
+        // --- 6. החלת האנימציה ---
         if (wheelGroup) {
             wheelGroup.style.transition = 'transform 6s cubic-bezier(0.15, 0.8, 0.2, 1)';
             wheelGroup.style.transform = `rotate(${finalWheelAngle}deg)`;
@@ -785,15 +844,4 @@ function updateHistory() {
 function init() {
     buildNumbersGrid();
     buildWheel();
-    attachBetListeners();
-
-    spinBtn.addEventListener('click', spin);
-    clearBtn.addEventListener('click', clearBets);
-
-    setupChips();
-    updateUI();
-
-    console.log('✅ Royal Roulette v9 - Realistic Ball');
-}
-
-window.addEventListener('load', init);
+    attachBetListen
