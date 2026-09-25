@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v10 Final Complete)
+ *  European Roulette - Client (v11 Final)
  * ============================================================
  */
 
@@ -64,14 +64,19 @@ function showToast(msg, type = 'info') {
 }
 
 // ============================================================
-//  בניית לוח המספרים 1-36
+//  בניית לוח המספרים 1-36 - סדר סטנדרטי כמו בקזינו
+//  שורה עליונה:  3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36
+//  שורה אמצעית: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35
+//  שורה תחתונה:  1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34
 // ============================================================
 function buildNumbersGrid() {
     numbersGrid.innerHTML = '';
-    for (let row = 0; row < 12; row++) {
-        const base = (11 - row) * 3;
-        for (let i = 0; i < 3; i++) {
-            const num = base + (3 - i);
+
+    for (let row = 0; row < 3; row++) {
+        const rowStart = 3 - row;
+
+        for (let col = 0; col < 12; col++) {
+            const num = rowStart + col * 3;
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'bet-btn num-btn';
@@ -361,7 +366,6 @@ function buildWheel() {
     ballGroup.setAttribute('id', 'roulette-ball-group');
     ballGroup.style.transformOrigin = `${center}px ${center}px`;
 
-    // צל הכדור
     const ballShadow = document.createElementNS(svgNS, 'ellipse');
     ballShadow.setAttribute('cx', center + 1);
     ballShadow.setAttribute('cy', center - ballOrbit + 2);
@@ -370,7 +374,6 @@ function buildWheel() {
     ballShadow.setAttribute('fill', 'rgba(0, 0, 0, 0.5)');
     ballGroup.appendChild(ballShadow);
 
-    // הילה זוהרת
     const ballGlowCircle = document.createElementNS(svgNS, 'circle');
     ballGlowCircle.setAttribute('cx', center);
     ballGlowCircle.setAttribute('cy', center - ballOrbit);
@@ -379,7 +382,6 @@ function buildWheel() {
     ballGlowCircle.setAttribute('opacity', '0.6');
     ballGroup.appendChild(ballGlowCircle);
 
-    // הכדור עצמו
     const ball = document.createElementNS(svgNS, 'circle');
     ball.setAttribute('cx', center);
     ball.setAttribute('cy', center - ballOrbit);
@@ -389,7 +391,6 @@ function buildWheel() {
     ball.setAttribute('stroke-width', '0.8');
     ballGroup.appendChild(ball);
 
-    // השתקפות
     const ballHighlight = document.createElementNS(svgNS, 'ellipse');
     ballHighlight.setAttribute('cx', center - 2);
     ballHighlight.setAttribute('cy', center - ballOrbit - 2);
@@ -623,7 +624,7 @@ function startContinuousSpin() {
 }
 
 // ============================================================
-//  עצירה - הכדור נוחת על המספר הזוכה
+//  עצירה - הכדור נוחת על המספר הזוכה (מתוקן)
 // ============================================================
 function stopSpinOnNumber(winningNumber) {
     return new Promise(resolve => {
@@ -635,34 +636,50 @@ function stopSpinOnNumber(winningNumber) {
         const wheelGroup = document.getElementById('wheel-group');
         const ballGroup = document.getElementById('roulette-ball-group');
 
+        if (!wheelGroup || !ballGroup) {
+            resolve();
+            return;
+        }
+
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePer = 360 / WHEEL_ORDER.length;
 
-        const finalWheelAngle = state.wheelAngle + 360 * 1.5 + (Math.random() * 60 - 30);
-        const numberMidAngleInWheel = -90 + idx * anglePer;
-        const numberGlobalAngle = numberMidAngleInWheel + finalWheelAngle;
-        const targetBallAngle = -numberGlobalAngle;
+        // --- 1. הגלגל נעצר בזווית אקראית קלה ---
+        const wheelStopDelta = 360 * 1.5 + (Math.random() * 60 - 30);
+        const finalWheelAngle = state.wheelAngle + wheelStopDelta;
 
+        // --- 2. זווית המספר בתוך הגלגל ---
+        const numberAngleInWheel = -90 + idx * anglePer;
+
+        // --- 3. הזווית של המספר במישור העולמי ---
+        const numberGlobalAngle = numberAngleInWheel + finalWheelAngle;
+
+        // --- 4. הזווית של הכדור ---
+        const targetBallAngle = ((-numberGlobalAngle) % 360 + 360) % 360;
+
+        // --- 5. סיבוב ארוך של הכדור ---
         const currentBallAngle = state.ballAngle;
-        const ballDelta = ((targetBallAngle - currentBallAngle) % 360 + 360) % 360;
-        const finalBallAngle = currentBallAngle + 360 * 8 + ballDelta;
+        const currentMod = ((currentBallAngle % 360) + 360) % 360;
 
-        if (wheelGroup) {
-            wheelGroup.style.transition = 'transform 6s cubic-bezier(0.15, 0.8, 0.2, 1)';
-            wheelGroup.style.transform = `rotate(${finalWheelAngle}deg)`;
-        }
+        let delta = targetBallAngle - currentMod;
+        if (delta < 0) delta += 360;
+        delta += 360 * 8;
 
-        if (ballGroup) {
-            ballGroup.style.transition = 'transform 6s cubic-bezier(0.2, 0.85, 0.15, 1)';
-            ballGroup.style.transform = `rotate(${finalBallAngle}deg)`;
-        }
+        const finalBallAngle = currentBallAngle + delta;
 
-        state.wheelAngle = finalWheelAngle % 360;
-        state.ballAngle = finalBallAngle % 360;
+        // --- 6. החלת האנימציה ---
+        wheelGroup.style.transition = 'transform 6s cubic-bezier(0.15, 0.8, 0.2, 1)';
+        wheelGroup.style.transform = `rotate(${finalWheelAngle}deg)`;
+
+        ballGroup.style.transition = 'transform 6s cubic-bezier(0.2, 0.85, 0.15, 1)';
+        ballGroup.style.transform = `rotate(${finalBallAngle}deg)`;
+
+        state.wheelAngle = ((finalWheelAngle % 360) + 360) % 360;
+        state.ballAngle = ((finalBallAngle % 360) + 360) % 360;
 
         setTimeout(() => {
-            if (wheelGroup) wheelGroup.style.transition = '';
-            if (ballGroup) ballGroup.style.transition = '';
+            wheelGroup.style.transition = '';
+            ballGroup.style.transition = '';
             resolve();
         }, 6100);
     });
@@ -835,11 +852,4 @@ function init() {
     setupChips();
     updateUI();
 
-    console.log('✅ Royal Roulette v10 הופעל');
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
+    console
