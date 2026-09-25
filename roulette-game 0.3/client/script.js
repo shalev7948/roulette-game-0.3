@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v11 Final)
+ *  European Roulette - Client (v12 Final)
  * ============================================================
  */
 
@@ -597,7 +597,7 @@ function setupHoverHighlighting() {
 }
 
 // ============================================================
-//  אנימציית סיבוב
+//  אנימציית סיבוב - הגלגל מסתובב והכדור נשאר למעלה
 // ============================================================
 function startContinuousSpin() {
     const wheelGroup = document.getElementById('wheel-group');
@@ -624,7 +624,7 @@ function startContinuousSpin() {
 }
 
 // ============================================================
-//  עצירה - הכדור נוחת על המספר הזוכה (מתוקן)
+//  עצירה - הגלגל מסתובב כך שהמספר הזוכה עומד בדיוק למעלה
 // ============================================================
 function stopSpinOnNumber(winningNumber) {
     return new Promise(resolve => {
@@ -644,30 +644,29 @@ function stopSpinOnNumber(winningNumber) {
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePer = 360 / WHEEL_ORDER.length;
 
-        // --- 1. הגלגל נעצר בזווית אקראית קלה ---
-        const wheelStopDelta = 360 * 1.5 + (Math.random() * 60 - 30);
-        const finalWheelAngle = state.wheelAngle + wheelStopDelta;
-
-        // --- 2. זווית המספר בתוך הגלגל ---
+        // --- 1. הזווית של המספר בתוך הגלגל ---
+        // midAngle = -90 + idx * anglePer
         const numberAngleInWheel = -90 + idx * anglePer;
 
-        // --- 3. הזווית של המספר במישור העולמי ---
-        const numberGlobalAngle = numberAngleInWheel + finalWheelAngle;
+        // --- 2. הזווית של הגלגל ---
+        // אנחנו רוצים: numberAngleInWheel + finalWheelAngle ≡ -90 (mod 360)
+        // כלומר: המספר יעמוד בזווית -90° (למעלה, היכן שהכדור)
+        // finalWheelAngle ≡ -90 - numberAngleInWheel ≡ -idx * anglePer
+        
+        let targetWheelAngle = -idx * anglePer;
 
-        // --- 4. הזווית של הכדור ---
-        const targetBallAngle = ((-numberGlobalAngle) % 360 + 360) % 360;
+        // --- 3. חישוב הסיבוב הארוך ---
+        const currentWheelAngle = state.wheelAngle;
+        const currentMod = ((currentWheelAngle % 360) + 360) % 360;
+        let wheelDelta = ((targetWheelAngle - currentMod) % 360 + 360) % 360;
+        wheelDelta += 360 * 2; // סיבוב נוסף לאפקט
 
-        // --- 5. סיבוב ארוך של הכדור ---
-        const currentBallAngle = state.ballAngle;
-        const currentMod = ((currentBallAngle % 360) + 360) % 360;
+        const finalWheelAngle = currentWheelAngle + wheelDelta;
 
-        let delta = targetBallAngle - currentMod;
-        if (delta < 0) delta += 360;
-        delta += 360 * 8;
+        // --- 4. הכדור נשאר במקומו העליון ---
+        const finalBallAngle = state.ballAngle + 360;
 
-        const finalBallAngle = currentBallAngle + delta;
-
-        // --- 6. החלת האנימציה ---
+        // --- 5. החלת האנימציה ---
         wheelGroup.style.transition = 'transform 6s cubic-bezier(0.15, 0.8, 0.2, 1)';
         wheelGroup.style.transform = `rotate(${finalWheelAngle}deg)`;
 
@@ -852,7 +851,7 @@ function init() {
     setupChips();
     updateUI();
 
-    console.log('✅ Royal Roulette v11 הופעל');
+    console.log('✅ Royal Roulette v12 הופעל');
 }
 
 if (document.readyState === 'loading') {
