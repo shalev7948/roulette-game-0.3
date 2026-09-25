@@ -1,5 +1,5 @@
 /* ============================================================
-   Royal Roulette - Casino Style (v6 Final)
+   Royal Roulette - Casino Style (v7 Final)
    ============================================================ */
 
 * {
@@ -201,19 +201,6 @@ body {
 
 .wheel::before {
     display: none;
-}
-
-.wheel-pointer {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: var(--gold);
-    font-size: 2rem;
-    text-shadow: 0 0 15px var(--gold), 0 0 30px var(--gold);
-    z-index: 5;
-    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9));
-    pointer-events: none;
 }
 
 /* ============================================================
@@ -440,12 +427,25 @@ body {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 4px;
+    /* הופך את הסדר: 1st 12 בצד שמאל */
+    direction: ltr;
+}
+
+.dozens-row .dozen-btn {
+    /* הטקסט עצמו נשאר בכיוון עברית */
+    direction: rtl;
 }
 
 .even-money-row {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 4px;
+    /* הופך את הסדר: 1 to 18 בצד שמאל */
+    direction: ltr;
+}
+
+.even-money-row .em-btn {
+    direction: rtl;
 }
 
 /* ============================================================
