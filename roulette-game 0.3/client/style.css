@@ -1,5 +1,5 @@
 /* ============================================================
-   Royal Roulette - Casino Style (v6 - With Highlighting)
+   Royal Roulette - Casino Style (v6 Final)
    ============================================================ */
 
 * {
@@ -299,7 +299,7 @@ body {
 .numbers-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: 1fr;
+    grid-template-rows: repeat(3, 1fr);
     gap: 4px;
     min-height: 130px;
 }
