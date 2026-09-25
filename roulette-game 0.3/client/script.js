@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v10 - Fixed Ball + Highlighting)
+ *  European Roulette - Client (v10 Final Complete)
  * ============================================================
  */
 
@@ -493,16 +493,12 @@ function setupChips() {
 }
 
 // ============================================================
-//  Event Delegation - חיבור כל הכפתורים
+//  Event Delegation
 // ============================================================
 function attachBetListeners() {
     document.addEventListener('click', (e) => {
-        if (e.target.closest('#spin-btn') || e.target.closest('#clear-btn')) {
-            return;
-        }
-        if (e.target.closest('.chip')) {
-            return;
-        }
+        if (e.target.closest('#spin-btn') || e.target.closest('#clear-btn')) return;
+        if (e.target.closest('.chip')) return;
         const btn = e.target.closest('.bet-btn');
         if (!btn) return;
         e.preventDefault();
@@ -511,10 +507,8 @@ function attachBetListeners() {
 }
 
 // ============================================================
-//  Hover Highlighting - הדגשת מספרים רלוונטיים
+//  Hover Highlighting
 // ============================================================
-
-// מחזיר את רשימת המספרים שמתאימים לסוג ההימור
 function getNumbersForBetType(type, numbers) {
     switch (type) {
         case 'straight':
@@ -551,7 +545,6 @@ function getNumbersForBetType(type, numbers) {
     }
 }
 
-// מחיל הדגשה על כל המספרים הרלוונטיים
 function highlightNumbers(numbers) {
     clearHighlights();
     numbers.forEach(num => {
@@ -560,14 +553,12 @@ function highlightNumbers(numbers) {
     });
 }
 
-// מסיר את כל ההדגשות
 function clearHighlights() {
     document.querySelectorAll('.bet-btn.highlighted').forEach(btn => {
         btn.classList.remove('highlighted');
     });
 }
 
-// מחבר hover highlighting לכל כפתורי ההימור
 function setupHoverHighlighting() {
     document.querySelectorAll('.bet-btn').forEach(btn => {
         btn.addEventListener('mouseenter', () => {
@@ -581,13 +572,11 @@ function setupHoverHighlighting() {
             const relevantNumbers = getNumbersForBetType(type, numbers);
             highlightNumbers(relevantNumbers);
         });
-
         btn.addEventListener('mouseleave', () => {
             clearHighlights();
         });
     });
 
-    // תמיכה בטאצ' (מובייל)
     document.addEventListener('touchstart', (e) => {
         const btn = e.target.closest('.bet-btn');
         if (!btn) return;
@@ -634,7 +623,7 @@ function startContinuousSpin() {
 }
 
 // ============================================================
-//  עצירה - הכדור נוחת על המספר הזוכה (מתוקן!)
+//  עצירה - הכדור נוחת על המספר הזוכה
 // ============================================================
 function stopSpinOnNumber(winningNumber) {
     return new Promise(resolve => {
@@ -649,28 +638,15 @@ function stopSpinOnNumber(winningNumber) {
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePer = 360 / WHEEL_ORDER.length;
 
-        // --- 1. הגלגל נעצר בזווית אקראית קלה ---
         const finalWheelAngle = state.wheelAngle + 360 * 1.5 + (Math.random() * 60 - 30);
-
-        // --- 2. זווית המספר בתוך הגלגל ---
-        // המספר idx יושב במרכז המקטע שלו:
-        // midAngle = -90 + idx * anglePer
         const numberMidAngleInWheel = -90 + idx * anglePer;
-
-        // --- 3. זווית המספר במישור העולמי (אחרי סיבוב הגלגל) ---
         const numberGlobalAngle = numberMidAngleInWheel + finalWheelAngle;
-
-        // --- 4. זווית הכדור ---
-        // הכדור צריך להיות בזווית 0 (למעלה) כשהמספר מגיע למעלה
-        // ballAngle + numberGlobalAngle = 0 (mod 360)
         const targetBallAngle = -numberGlobalAngle;
 
-        // --- 5. סיבוב ארוך של הכדור ---
         const currentBallAngle = state.ballAngle;
         const ballDelta = ((targetBallAngle - currentBallAngle) % 360 + 360) % 360;
         const finalBallAngle = currentBallAngle + 360 * 8 + ballDelta;
 
-        // --- 6. החלת האנימציה ---
         if (wheelGroup) {
             wheelGroup.style.transition = 'transform 6s cubic-bezier(0.15, 0.8, 0.2, 1)';
             wheelGroup.style.transform = `rotate(${finalWheelAngle}deg)`;
@@ -842,6 +818,28 @@ function updateHistory() {
 //  אתחול
 // ============================================================
 function init() {
+    console.log('🎰 מאתחל את המשחק...');
+
     buildNumbersGrid();
+    console.log('✅ לוח המספרים נבנה');
+
     buildWheel();
-    attachBetListen
+    console.log('✅ הגלגל נבנה');
+
+    attachBetListeners();
+    setupHoverHighlighting();
+
+    spinBtn.addEventListener('click', spin);
+    clearBtn.addEventListener('click', clearBets);
+
+    setupChips();
+    updateUI();
+
+    console.log('✅ Royal Roulette v10 הופעל');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
