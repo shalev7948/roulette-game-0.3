@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v15 Final)
+ *  European Roulette - Client (v16 Final)
  * ============================================================
  */
 
@@ -207,13 +207,9 @@ function buildWheel() {
         const midAngle = (startAngle + endAngle) / 2;
 
         let fillColor;
-        if (num === 0) {
-            fillColor = '#0d8a3e';
-        } else if (RED_NUMBERS.includes(num)) {
-            fillColor = '#c8102e';
-        } else {
-            fillColor = '#1a1a1a';
-        }
+        if (num === 0) fillColor = '#0d8a3e';
+        else if (RED_NUMBERS.includes(num)) fillColor = '#c8102e';
+        else fillColor = '#1a1a1a';
 
         const startRad = (startAngle * Math.PI) / 180;
         const endRad = (endAngle * Math.PI) / 180;
@@ -366,7 +362,6 @@ function buildWheel() {
     ballGroup.appendChild(ballHighlight);
 
     svg.appendChild(ballGroup);
-
     wheelNumbersEl.appendChild(svg);
 }
 
@@ -375,7 +370,6 @@ function handleBetClick(btn) {
 
     const type = btn.dataset.type;
     const numbersRaw = btn.dataset.numbers;
-
     if (!type) return;
 
     let numbers = [];
@@ -384,7 +378,6 @@ function handleBetClick(btn) {
     }
 
     const key = type + '-' + (numbers.length > 0 ? numbers.join(',') : 'empty');
-
     const existingIdx = state.bets.findIndex(b => b.key === key);
 
     if (existingIdx >= 0) {
@@ -392,22 +385,16 @@ function handleBetClick(btn) {
         btn.classList.remove('selected');
         btn.removeAttribute('data-chip');
     } else {
-        if (state.betAmount <= 0) {
-            showToast('בחר צ\'יפ תקין', 'error');
-            return;
-        }
-
+        if (state.betAmount <= 0) { showToast('בחר צ\'יפ תקין', 'error'); return; }
         const currentTotal = state.bets.reduce((s, b) => s + b.amount, 0);
         if (currentTotal + state.betAmount > state.balance) {
             showToast('אין מספיק יתרה!', 'error');
             return;
         }
-
         state.bets.push({ type, numbers, amount: state.betAmount, key });
         btn.classList.add('selected');
         btn.setAttribute('data-chip', state.betAmount);
     }
-
     updateUI();
 }
 
@@ -415,7 +402,6 @@ function updateUI() {
     const totalBet = state.bets.reduce((s, b) => s + b.amount, 0);
     balanceEl.textContent = Math.floor(state.balance);
     totalBetEl.textContent = totalBet;
-
     spinBtn.disabled = state.bets.length === 0 || state.isSpinning;
     clearBtn.disabled = state.bets.length === 0 || state.isSpinning;
 }
@@ -509,12 +495,9 @@ function setupHoverHighlighting() {
             if (numbersRaw && numbersRaw.trim() !== '') {
                 numbers = numbersRaw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
             }
-            const relevantNumbers = getNumbersForBetType(type, numbers);
-            highlightNumbers(relevantNumbers);
+            highlightNumbers(getNumbersForBetType(type, numbers));
         });
-        btn.addEventListener('mouseleave', () => {
-            clearHighlights();
-        });
+        btn.addEventListener('mouseleave', () => clearHighlights());
     });
 
     document.addEventListener('touchstart', (e) => {
@@ -526,13 +509,10 @@ function setupHoverHighlighting() {
         if (numbersRaw && numbersRaw.trim() !== '') {
             numbers = numbersRaw.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
         }
-        const relevantNumbers = getNumbersForBetType(type, numbers);
-        highlightNumbers(relevantNumbers);
+        highlightNumbers(getNumbersForBetType(type, numbers));
     }, { passive: true });
 
-    document.addEventListener('touchend', () => {
-        clearHighlights();
-    });
+    document.addEventListener('touchend', () => clearHighlights());
 }
 
 // ============================================================
@@ -563,8 +543,7 @@ function startContinuousSpin() {
 }
 
 // ============================================================
-//  עצירה - הכדור נוחת בזווית אקראית והגלגל מסתובב
-//  כך שהמספר הזוכה יעמוד בדיוק מתחת לכדור
+//  עצירה - הגלגל נעצר, והכדור מובל למספר הזוכה
 // ============================================================
 function stopSpinOnNumber(winningNumber) {
     return new Promise(resolve => {
@@ -584,39 +563,37 @@ function stopSpinOnNumber(winningNumber) {
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePer = 360 / WHEEL_ORDER.length;
 
-        // 1. זווית אקראית חדשה לכדור
-        const ballFinalAngle = Math.floor(Math.random() * 360);
+        // 1. הגלגל נעצר בזווית אקראית קלה
+        const wheelStopAngle = state.wheelAngle + 360 * 0.5 + Math.random() * 90;
 
-        // 2. חישוב הזווית הסופית של הגלגל
-        //    הזווית של המספר idx בתוך הגלגל: -90 + idx * anglePer
-        //    אחרי סיבוב הגלגל ב-Y: -90 + idx * anglePer + Y
-        //    אנחנו רוצים שזה יהיה שווה ל-ballFinalAngle:
-        //    Y = ballFinalAngle + 90 - idx * anglePer
-        const targetWheelMod = ((ballFinalAngle + 90 - idx * anglePer) % 360 + 360) % 360;
+        // 2. הזווית של המספר idx בתוך הגלגל (לפני סיבוב)
+        const numberAngleInWheel = -90 + idx * anglePer;
 
-        const currentWheelMod = ((state.wheelAngle % 360) + 360) % 360;
-        let wheelDelta = targetWheelMod - currentWheelMod;
-        if (wheelDelta < 0) wheelDelta += 360;
-        wheelDelta += 360 * 2;
+        // 3. הזווית של המספר במישור העולמי אחרי שהגלגל נעצר
+        const numberAngleInWorld = numberAngleInWheel + wheelStopAngle;
 
-        const finalWheelAngle = state.wheelAngle + wheelDelta;
+        // 4. הכדור צריך להיות בזווית של המספר
+        //    אבל צריך לקחת בחשבון שהכדור מוצב בהתחלה ב-12:00 (זווית 0)
+        //    כשמסובבים את הכדור ב-X, הזווית שלו היא: 0 + X = X
+        //    לכן: ballFinalAngle = numberAngleInWorld + 90 (תיקון 90° כי הכדור ב-12:00, לא ב--90°)
+        const ballFinalAngle = numberAngleInWorld + 90;
 
-        // 3. הכדור מסתובב לזווית האקראית
+        // 5. סיבוב ארוך של הכדור
         const currentBallMod = ((state.ballAngle % 360) + 360) % 360;
         let ballDelta = ballFinalAngle - currentBallMod;
-        if (ballDelta < 0) ballDelta += 360;
-        ballDelta += 360 * 10;
+        while (ballDelta < 0) ballDelta += 360;
+        ballDelta += 360 * 8;
 
         const finalBallAngle = state.ballAngle + ballDelta;
 
-        // 4. החלת האנימציה
+        // 6. החלת האנימציה
         wheelGroup.style.transition = 'transform 6s cubic-bezier(0.15, 0.8, 0.2, 1)';
-        wheelGroup.style.transform = `rotate(${finalWheelAngle}deg)`;
+        wheelGroup.style.transform = `rotate(${wheelStopAngle}deg)`;
 
         ballGroup.style.transition = 'transform 6s cubic-bezier(0.2, 0.85, 0.15, 1)';
         ballGroup.style.transform = `rotate(${finalBallAngle}deg)`;
 
-        state.wheelAngle = ((finalWheelAngle % 360) + 360) % 360;
+        state.wheelAngle = ((wheelStopAngle % 360) + 360) % 360;
         state.ballAngle = ((finalBallAngle % 360) + 360) % 360;
 
         setTimeout(() => {
@@ -794,7 +771,7 @@ function init() {
     setupChips();
     updateUI();
 
-    console.log('✅ Royal Roulette v15 הופעל');
+    console.log('✅ Royal Roulette v16 הופעל');
 }
 
 if (document.readyState === 'loading') {
