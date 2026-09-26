@@ -842,4 +842,25 @@ function init() {
     console.log('🎰 מאתחל את המשחק...');
 
     buildNumbersGrid();
-    console.log('
+        console.log('✅ לוח המספרים נבנה');
+
+    buildWheel();
+    console.log('✅ הגלגל נבנה');
+
+    attachBetListeners();
+    setupHoverHighlighting();
+
+    spinBtn.addEventListener('click', spin);
+    clearBtn.addEventListener('click', clearBets);
+
+    setupChips();
+    updateUI();
+
+    console.log('✅ Royal Roulette v13 הופעל');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
