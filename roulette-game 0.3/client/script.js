@@ -646,7 +646,9 @@ function stopSpinOnNumber(winningNumber) {
         const anglePer = 360 / WHEEL_ORDER.length;
 
         // 1. זווית אקראית לכדור (0-360)
+        // הזווית של הכדור - מוסיפים 180° כדי לפצות על כיוון ה-SVG
         const randomBallAngle = Math.floor(Math.random() * 360);
+        const adjustedBallAngle = (randomBallAngle + 180) % 360;
 
         // 2. זווית המספר בגלגל
         //    בגלל שה-SVG בנוי עם rotate, הזווית של המספר היא:
