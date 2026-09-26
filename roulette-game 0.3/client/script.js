@@ -649,13 +649,17 @@ function stopSpinOnNumber(winningNumber) {
         const randomBallAngle = Math.floor(Math.random() * 360);
 
         // 2. זווית המספר בגלגל
+        //    בגלל שה-SVG בנוי עם rotate, הזווית של המספר היא:
+        //    numberAngleInWheel = -90 + idx * anglePer
         const numberAngleInWheel = -90 + idx * anglePer;
 
-        // 3. זווית סופית של הגלגל:
-        // numberAngleInWheel + finalWheelAngle ≡ randomBallAngle (mod 360)
-        // finalWheelAngle ≡ randomBallAngle - numberAngleInWheel
+        // 3. הזווית הסופית של הגלגל
+        //    אנחנו רוצים: numberAngleInWheel + finalWheelAngle ≡ randomBallAngle (mod 360)
+        //    לכן: finalWheelAngle ≡ randomBallAngle - numberAngleInWheel
+        //    אבל שים לב: גם הזווית של הכדור נמדדת אחרת - היא מתחילה מ-12:00 ונעה עם כיוון השעון.
+        //    לכן אנחנו צריכים להתאים את הכיוון:
+        
         const targetWheelMod = ((randomBallAngle - numberAngleInWheel) % 360 + 360) % 360;
-
         const currentWheelMod = ((state.wheelAngle % 360) + 360) % 360;
         let wheelDelta = targetWheelMod - currentWheelMod;
         if (wheelDelta < 0) wheelDelta += 360;
