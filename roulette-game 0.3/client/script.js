@@ -1,12 +1,9 @@
 /**
  * ============================================================
- *  European Roulette - Client (v14 Final)
+ *  European Roulette - Client (v15 Final)
  * ============================================================
  */
 
-// ============================================================
-//  מצב המשחק
-// ============================================================
 const state = {
     balance: 1000,
     bets: [],
@@ -18,9 +15,6 @@ const state = {
     animationId: null
 };
 
-// ============================================================
-//  DOM
-// ============================================================
 const $ = id => document.getElementById(id);
 const balanceEl = $('balance');
 const totalBetEl = $('total-bet');
@@ -38,9 +32,6 @@ const wheelNumbersEl = $('wheel-numbers');
 const toastEl = $('toast');
 const chipsContainer = $('chips');
 
-// ============================================================
-//  קבועים
-// ============================================================
 const RED_NUMBERS = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
 const WHEEL_ORDER = [
@@ -48,9 +39,6 @@ const WHEEL_ORDER = [
     5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
 ];
 
-// ============================================================
-//  Toast
-// ============================================================
 let toastTimeout = null;
 function showToast(msg, type = 'info') {
     if (!toastEl) return;
@@ -63,9 +51,6 @@ function showToast(msg, type = 'info') {
     }, 2500);
 }
 
-// ============================================================
-//  בניית לוח המספרים 1-36
-// ============================================================
 function buildNumbersGrid() {
     numbersGrid.innerHTML = '';
 
@@ -92,9 +77,6 @@ function buildNumbersGrid() {
     }
 }
 
-// ============================================================
-//  בניית הגלגל הריאליסטי עם SVG + כדור תלת-ממדי
-// ============================================================
 function buildWheel() {
     const svgNS = 'http://www.w3.org/2000/svg';
     const size = 400;
@@ -117,7 +99,6 @@ function buildWheel() {
 
     const defs = document.createElementNS(svgNS, 'defs');
 
-    // גרדיאנט זהב
     const goldGrad = document.createElementNS(svgNS, 'radialGradient');
     goldGrad.setAttribute('id', 'goldGrad');
     goldGrad.setAttribute('cx', '35%');
@@ -136,7 +117,6 @@ function buildWheel() {
     goldGrad.appendChild(gs3);
     defs.appendChild(goldGrad);
 
-    // גרדיאנט למרכז
     const hubGrad = document.createElementNS(svgNS, 'radialGradient');
     hubGrad.setAttribute('id', 'hubGrad');
     hubGrad.setAttribute('cx', '35%');
@@ -155,7 +135,6 @@ function buildWheel() {
     hubGrad.appendChild(hs3);
     defs.appendChild(hubGrad);
 
-    // גרדיאנט כדור
     const ballGrad = document.createElementNS(svgNS, 'radialGradient');
     ballGrad.setAttribute('id', 'ballGrad');
     ballGrad.setAttribute('cx', '32%');
@@ -183,7 +162,6 @@ function buildWheel() {
     ballGrad.appendChild(bs5);
     defs.appendChild(ballGrad);
 
-    // הילה זוהרת לכדור
     const ballGlow = document.createElementNS(svgNS, 'radialGradient');
     ballGlow.setAttribute('id', 'ballGlow');
     ballGlow.setAttribute('cx', '50%');
@@ -207,7 +185,6 @@ function buildWheel() {
 
     svg.appendChild(defs);
 
-    // טבעת זהב חיצונית
     const outerRing = document.createElementNS(svgNS, 'circle');
     outerRing.setAttribute('cx', center);
     outerRing.setAttribute('cy', center);
@@ -217,13 +194,11 @@ function buildWheel() {
     outerRing.setAttribute('stroke-width', '2');
     svg.appendChild(outerRing);
 
-    // קבוצת הגלגל
     const wheelGroup = document.createElementNS(svgNS, 'g');
     wheelGroup.setAttribute('id', 'wheel-group');
     wheelGroup.style.transformOrigin = `${center}px ${center}px`;
     svg.appendChild(wheelGroup);
 
-    // 37 מקטעים
     const startOffset = -90 - (anglePer / 2);
 
     WHEEL_ORDER.forEach((num, idx) => {
@@ -295,7 +270,6 @@ function buildWheel() {
         wheelGroup.appendChild(dot);
     });
 
-    // טבעת פנימית
     const innerRing = document.createElementNS(svgNS, 'circle');
     innerRing.setAttribute('cx', center);
     innerRing.setAttribute('cy', center);
@@ -305,7 +279,6 @@ function buildWheel() {
     innerRing.setAttribute('stroke-width', '2');
     wheelGroup.appendChild(innerRing);
 
-    // מרכז זהוב
     const hub = document.createElementNS(svgNS, 'circle');
     hub.setAttribute('cx', center);
     hub.setAttribute('cy', center);
@@ -315,7 +288,6 @@ function buildWheel() {
     hub.setAttribute('stroke-width', '2');
     wheelGroup.appendChild(hub);
 
-    // 8 זרועות
     for (let s = 0; s < 8; s++) {
         const sAngle = (s * 45) * Math.PI / 180;
         const x1 = center + 25 * Math.cos(sAngle);
@@ -335,7 +307,6 @@ function buildWheel() {
         wheelGroup.appendChild(spoke);
     }
 
-    // ציר מרכזי
     const axle = document.createElementNS(svgNS, 'circle');
     axle.setAttribute('cx', center);
     axle.setAttribute('cy', center);
@@ -353,7 +324,6 @@ function buildWheel() {
     axleDot.setAttribute('opacity', '0.85');
     wheelGroup.appendChild(axleDot);
 
-    // הכדור
     const ballRadius = 7;
     const ballOrbit = outerR - 14;
 
@@ -400,9 +370,6 @@ function buildWheel() {
     wheelNumbersEl.appendChild(svg);
 }
 
-// ============================================================
-//  לחיצה על כפתור הימור
-// ============================================================
 function handleBetClick(btn) {
     if (!btn || state.isSpinning) return;
 
@@ -444,9 +411,6 @@ function handleBetClick(btn) {
     updateUI();
 }
 
-// ============================================================
-//  עדכון ממשק
-// ============================================================
 function updateUI() {
     const totalBet = state.bets.reduce((s, b) => s + b.amount, 0);
     balanceEl.textContent = Math.floor(state.balance);
@@ -456,9 +420,6 @@ function updateUI() {
     clearBtn.disabled = state.bets.length === 0 || state.isSpinning;
 }
 
-// ============================================================
-//  ניקוי הימורים
-// ============================================================
 function clearBets() {
     if (state.isSpinning) return;
     state.bets = [];
@@ -470,9 +431,6 @@ function clearBets() {
     updateUI();
 }
 
-// ============================================================
-//  בחירת צ'יפ
-// ============================================================
 function setupChips() {
     if (!chipsContainer) return;
     const chips = chipsContainer.querySelectorAll('.chip');
@@ -488,9 +446,6 @@ function setupChips() {
     });
 }
 
-// ============================================================
-//  Event Delegation
-// ============================================================
 function attachBetListeners() {
     document.addEventListener('click', (e) => {
         if (e.target.closest('#spin-btn') || e.target.closest('#clear-btn')) return;
@@ -502,25 +457,15 @@ function attachBetListeners() {
     });
 }
 
-// ============================================================
-//  Hover Highlighting
-// ============================================================
 function getNumbersForBetType(type, numbers) {
     switch (type) {
-        case 'straight':
-            return numbers;
-        case 'red':
-            return RED_NUMBERS.slice();
-        case 'black':
-            return [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
-        case 'odd':
-            return Array.from({length: 18}, (_, i) => i * 2 + 1);
-        case 'even':
-            return Array.from({length: 18}, (_, i) => (i + 1) * 2);
-        case 'low':
-            return Array.from({length: 18}, (_, i) => i + 1);
-        case 'high':
-            return Array.from({length: 18}, (_, i) => i + 19);
+        case 'straight': return numbers;
+        case 'red': return RED_NUMBERS.slice();
+        case 'black': return [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35];
+        case 'odd': return Array.from({length: 18}, (_, i) => i * 2 + 1);
+        case 'even': return Array.from({length: 18}, (_, i) => (i + 1) * 2);
+        case 'low': return Array.from({length: 18}, (_, i) => i + 1);
+        case 'high': return Array.from({length: 18}, (_, i) => i + 19);
         case 'dozen': {
             const dozen = numbers[0];
             if (dozen === 1) return Array.from({length: 12}, (_, i) => i + 1);
@@ -536,8 +481,7 @@ function getNumbersForBetType(type, numbers) {
             }
             return result;
         }
-        default:
-            return [];
+        default: return [];
     }
 }
 
@@ -592,16 +536,15 @@ function setupHoverHighlighting() {
 }
 
 // ============================================================
-//  אנימציית סיבוב - גלגל איטי, כדור מהיר
+//  אנימציית סיבוב
 // ============================================================
 function startContinuousSpin() {
     const wheelGroup = document.getElementById('wheel-group');
     const ballGroup = document.getElementById('roulette-ball-group');
 
     const startTime = performance.now();
-    // גלגל איטי, כדור מהיר
-    const wheelBaseSpeed = 360 * 0.3;    // גלגל - איטי
-    const ballBaseSpeed = -360 * 3.5;    // כדור - מהיר, נגד כיוון
+    const wheelBaseSpeed = 360 * 0.3;
+    const ballBaseSpeed = -360 * 3.5;
 
     function animate(now) {
         const elapsed = (now - startTime) / 1000;
@@ -620,8 +563,8 @@ function startContinuousSpin() {
 }
 
 // ============================================================
-//  עצירה ריאליסטית - הכדור נוחת בזווית אקראית
-//  והגלגל מסתובב כך שהמספר הזוכה יהיה בדיוק מתחת לכדור
+//  עצירה - הכדור נוחת בזווית אקראית והגלגל מסתובב
+//  כך שהמספר הזוכה יעמוד בדיוק מתחת לכדור
 // ============================================================
 function stopSpinOnNumber(winningNumber) {
     return new Promise(resolve => {
@@ -641,32 +584,32 @@ function stopSpinOnNumber(winningNumber) {
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePer = 360 / WHEEL_ORDER.length;
 
-        // 1. זווית אקראית לכדור - עם תיקון 180° בגלל כיוון ה-SVG
-        const randomBallAngle = (Math.floor(Math.random() * 360) + 180) % 360;
+        // 1. זווית אקראית חדשה לכדור
+        const ballFinalAngle = Math.floor(Math.random() * 360);
 
-        // 2. זווית המספר בגלגל
-        const numberAngleInWheel = -90 + idx * anglePer;
-
-        // 3. זווית סופית של הגלגל:
-        //    numberAngleInWheel + finalWheelAngle ≡ randomBallAngle (mod 360)
-        const targetWheelMod = ((randomBallAngle - numberAngleInWheel) % 360 + 360) % 360;
+        // 2. חישוב הזווית הסופית של הגלגל
+        //    הזווית של המספר idx בתוך הגלגל: -90 + idx * anglePer
+        //    אחרי סיבוב הגלגל ב-Y: -90 + idx * anglePer + Y
+        //    אנחנו רוצים שזה יהיה שווה ל-ballFinalAngle:
+        //    Y = ballFinalAngle + 90 - idx * anglePer
+        const targetWheelMod = ((ballFinalAngle + 90 - idx * anglePer) % 360 + 360) % 360;
 
         const currentWheelMod = ((state.wheelAngle % 360) + 360) % 360;
         let wheelDelta = targetWheelMod - currentWheelMod;
         if (wheelDelta < 0) wheelDelta += 360;
-        wheelDelta += 360 * 2;   // סיבוב נוסף של הגלגל (מינימלי)
+        wheelDelta += 360 * 2;
 
         const finalWheelAngle = state.wheelAngle + wheelDelta;
 
-        // 4. סיבוב הכדור לזווית האקראית (הרבה סיבובים)
+        // 3. הכדור מסתובב לזווית האקראית
         const currentBallMod = ((state.ballAngle % 360) + 360) % 360;
-        let ballDelta = randomBallAngle - currentBallMod;
+        let ballDelta = ballFinalAngle - currentBallMod;
         if (ballDelta < 0) ballDelta += 360;
-        ballDelta += 360 * 10;   // יותר סיבובים של הכדור
+        ballDelta += 360 * 10;
 
         const finalBallAngle = state.ballAngle + ballDelta;
 
-        // 5. החלת האנימציה
+        // 4. החלת האנימציה
         wheelGroup.style.transition = 'transform 6s cubic-bezier(0.15, 0.8, 0.2, 1)';
         wheelGroup.style.transform = `rotate(${finalWheelAngle}deg)`;
 
@@ -851,7 +794,7 @@ function init() {
     setupChips();
     updateUI();
 
-    console.log('✅ Royal Roulette v14 הופעל');
+    console.log('✅ Royal Roulette v15 הופעל');
 }
 
 if (document.readyState === 'loading') {
