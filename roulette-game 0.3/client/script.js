@@ -1,6 +1,6 @@
 /**
  * ============================================================
- *  European Roulette - Client (v13 Final)
+ *  European Roulette - Client (v14 Final)
  * ============================================================
  */
 
@@ -65,9 +65,6 @@ function showToast(msg, type = 'info') {
 
 // ============================================================
 //  בניית לוח המספרים 1-36
-//  שורה עליונה:  3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36
-//  שורה אמצעית: 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35
-//  שורה תחתונה:  1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34
 // ============================================================
 function buildNumbersGrid() {
     numbersGrid.innerHTML = '';
@@ -356,9 +353,7 @@ function buildWheel() {
     axleDot.setAttribute('opacity', '0.85');
     wheelGroup.appendChild(axleDot);
 
-    // ============================================================
-    //  הכדור
-    // ============================================================
+    // הכדור
     const ballRadius = 7;
     const ballOrbit = outerR - 14;
 
@@ -597,15 +592,16 @@ function setupHoverHighlighting() {
 }
 
 // ============================================================
-//  אנימציית סיבוב
+//  אנימציית סיבוב - גלגל איטי, כדור מהיר
 // ============================================================
 function startContinuousSpin() {
     const wheelGroup = document.getElementById('wheel-group');
     const ballGroup = document.getElementById('roulette-ball-group');
 
     const startTime = performance.now();
-    const wheelBaseSpeed = 360 * 0.5;
-    const ballBaseSpeed = -360 * 2.5;
+    // גלגל איטי, כדור מהיר
+    const wheelBaseSpeed = 360 * 0.3;    // גלגל - איטי
+    const ballBaseSpeed = -360 * 3.5;    // כדור - מהיר, נגד כיוון
 
     function animate(now) {
         const elapsed = (now - startTime) / 1000;
@@ -645,35 +641,28 @@ function stopSpinOnNumber(winningNumber) {
         const idx = Math.max(0, WHEEL_ORDER.indexOf(winningNumber));
         const anglePer = 360 / WHEEL_ORDER.length;
 
-        // 1. זווית אקראית לכדור (0-360)
-        // הזווית של הכדור - מוסיפים 180° כדי לפצות על כיוון ה-SVG
-        const randomBallAngle = Math.floor(Math.random() * 360);
-        const adjustedBallAngle = (randomBallAngle + 180) % 360;
+        // 1. זווית אקראית לכדור - עם תיקון 180° בגלל כיוון ה-SVG
+        const randomBallAngle = (Math.floor(Math.random() * 360) + 180) % 360;
 
         // 2. זווית המספר בגלגל
-        //    בגלל שה-SVG בנוי עם rotate, הזווית של המספר היא:
-        //    numberAngleInWheel = -90 + idx * anglePer
         const numberAngleInWheel = -90 + idx * anglePer;
 
-        // 3. הזווית הסופית של הגלגל
-        //    אנחנו רוצים: numberAngleInWheel + finalWheelAngle ≡ randomBallAngle (mod 360)
-        //    לכן: finalWheelAngle ≡ randomBallAngle - numberAngleInWheel
-        //    אבל שים לב: גם הזווית של הכדור נמדדת אחרת - היא מתחילה מ-12:00 ונעה עם כיוון השעון.
-        //    לכן אנחנו צריכים להתאים את הכיוון:
-        
+        // 3. זווית סופית של הגלגל:
+        //    numberAngleInWheel + finalWheelAngle ≡ randomBallAngle (mod 360)
         const targetWheelMod = ((randomBallAngle - numberAngleInWheel) % 360 + 360) % 360;
+
         const currentWheelMod = ((state.wheelAngle % 360) + 360) % 360;
         let wheelDelta = targetWheelMod - currentWheelMod;
         if (wheelDelta < 0) wheelDelta += 360;
-        wheelDelta += 360 * 3;
+        wheelDelta += 360 * 2;   // סיבוב נוסף של הגלגל (מינימלי)
 
         const finalWheelAngle = state.wheelAngle + wheelDelta;
 
-        // 4. סיבוב הכדור לזווית האקראית
+        // 4. סיבוב הכדור לזווית האקראית (הרבה סיבובים)
         const currentBallMod = ((state.ballAngle % 360) + 360) % 360;
         let ballDelta = randomBallAngle - currentBallMod;
         if (ballDelta < 0) ballDelta += 360;
-        ballDelta += 360 * 6;
+        ballDelta += 360 * 10;   // יותר סיבובים של הכדור
 
         const finalBallAngle = state.ballAngle + ballDelta;
 
@@ -848,7 +837,7 @@ function init() {
     console.log('🎰 מאתחל את המשחק...');
 
     buildNumbersGrid();
-        console.log('✅ לוח המספרים נבנה');
+    console.log('✅ לוח המספרים נבנה');
 
     buildWheel();
     console.log('✅ הגלגל נבנה');
@@ -862,7 +851,7 @@ function init() {
     setupChips();
     updateUI();
 
-    console.log('✅ Royal Roulette v13 הופעל');
+    console.log('✅ Royal Roulette v14 הופעל');
 }
 
 if (document.readyState === 'loading') {
